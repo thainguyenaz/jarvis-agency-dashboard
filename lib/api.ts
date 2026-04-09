@@ -7,6 +7,15 @@ async function jarvisFetch(path: string, token?: string) {
       ...(token ? { Authorization: `Bearer ${token}` } : {})
     },
   });
+  if (res.status === 401) {
+    // Token expired or invalid — clear and redirect to login
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('jarvis_token');
+      localStorage.removeItem('jarvis_user');
+      window.location.href = '/';
+    }
+    throw new Error('Session expired — redirecting to login');
+  }
   if (!res.ok) throw new Error(`API error: ${res.status}`);
   return res.json();
 }
