@@ -115,7 +115,7 @@ export default function GoogleAdsPage() {
               status: 'neutral' },
             { label: 'CPC', value: `$${performance.cpc?.toFixed(2) || '—'}`,
               status: 'neutral' },
-            { label: 'CONVERSIONS', value: performance.conversions || '—',
+            { label: 'CONVERSIONS', value: Math.round(performance.conversions || 0).toString(),
               status: 'neutral' },
             { label: 'COST PER LEAD', value: `$${cpl}`,
               status: cpl > 400 ? 'critical' : cpl > 200 ? 'warn' : 'good' },
@@ -174,31 +174,31 @@ export default function GoogleAdsPage() {
               </thead>
               <tbody>
                 {campaigns.map((c: any, i: number) => {
-                  const campCpl = c.metrics ?
-                    Math.round((c.metrics.spend || c.metrics.cost || 0) / (c.metrics.conversions || 1)) : 0
+                  const campCpl = c.conversions ?
+                    Math.round((c.spend || 0) / c.conversions) : 0
                   return (
                     <tr key={i} className="border-b border-jarvis-border border-opacity-30
                                           hover:bg-jarvis-bg transition-colors">
                       <td className="py-2 pr-4 text-jarvis-text max-w-xs truncate">
-                        {c.campaign?.name || 'Unknown'}
+                        {c.campaignName || 'Unknown'}
                       </td>
                       <td className="py-2 pr-4 text-right">
                         <span className={`px-2 py-0.5 rounded text-xs ${
-                          c.campaign?.status === 'ENABLED'
+                          c.status === 2
                             ? 'bg-jarvis-green bg-opacity-20 text-jarvis-green'
                             : 'bg-jarvis-red bg-opacity-20 text-jarvis-red'
                         }`}>
-                          {c.campaign?.status || '—'}
+                          {c.status === 2 ? 'ENABLED' : 'PAUSED'}
                         </span>
                       </td>
                       <td className="py-2 pr-4 text-right text-jarvis-text">
-                        ${c.metrics ? (c.metrics.spend || c.metrics.cost || 0).toFixed(0) : '—'}
+                        ${(c.spend || 0).toFixed(0)}
                       </td>
                       <td className="py-2 pr-4 text-right text-jarvis-text">
-                        {c.metrics?.clicks?.toLocaleString() || '—'}
+                        {c.clicks?.toLocaleString() || '—'}
                       </td>
                       <td className="py-2 pr-4 text-right text-jarvis-text">
-                        {c.metrics?.conversions || '—'}
+                        {c.conversions ? Math.round(c.conversions) : '—'}
                       </td>
                       <td className={`py-2 text-right font-bold ${
                         campCpl > 400 ? 'text-jarvis-red' :
