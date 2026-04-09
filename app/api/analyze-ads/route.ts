@@ -7,11 +7,11 @@ export async function POST(req: Request) {
 a luxury behavioral health treatment center in Arizona. You are in Phase 1: MONITOR AND ADVISE ONLY.
 
 Current Google Ads Performance Data:
-- Total Spend (30d): $${performance ? (performance.cost/1000000).toFixed(2) : 'unknown'}
+- Total Spend (30d): $${performance?.spend?.toFixed(2) || 'unknown'}
 - Total Clicks: ${performance?.clicks || 'unknown'}
-- CPC: $${performance ? (performance.cost/1000000/performance.clicks).toFixed(2) : 'unknown'}
-- Conversions: ${performance?.conversions || 'unknown'}
-- CPL (Cost Per Lead): $${performance ? Math.round((performance.cost/1000000)/(performance.conversions||1)) : 'unknown'}
+- CPC: $${performance?.cpc?.toFixed(2) || 'unknown'}
+- Conversions: ${Math.round(performance?.conversions || 0)}
+- CPL (Cost Per Lead): $${performance?.cost_per_conversion?.toFixed(2) || 'unknown'}
 
 Target CPL: <$150 (current is significantly above target)
 Industry benchmark CPL for behavioral health: $150-300
