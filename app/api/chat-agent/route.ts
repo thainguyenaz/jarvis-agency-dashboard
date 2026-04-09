@@ -61,12 +61,22 @@ a luxury behavioral health treatment center in Arizona. You advise Thai Nguyen (
 on marketing strategy. Phase 1: Advise only. No execution without Thai approval.
 Always respond in clean paragraphs. Never use bullet points or markdown headers.`
 
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+}
+
+export async function OPTIONS() {
+  return new Response(null, { status: 200, headers: corsHeaders })
+}
+
 export async function POST(req: Request) {
   try {
     const { message, agentId, agentRole, agentName, history, context } = await req.json()
 
     if (!message) {
-      return NextResponse.json({ reply: 'No message provided' }, { status: 400 })
+      return NextResponse.json({ reply: 'No message provided' }, { status: 400, headers: corsHeaders })
     }
 
     const persona = AGENT_PERSONAS[agentId] || DEFAULT_PERSONA
@@ -108,18 +118,18 @@ Thai approval before execution.`
       console.error('Anthropic API error:', response.status, errText)
       return NextResponse.json({
         reply: `Agent ${agentId || 'unknown'} API error: ${response.status}. Check server logs.`
-      }, { status: 500 })
+      }, { status: 500, headers: corsHeaders })
     }
 
     const data = await response.json()
     const reply = data.content?.[0]?.text || 'No response from agent'
 
-    return NextResponse.json({ reply, agentId, agentName })
+    return NextResponse.json({ reply, agentId, agentName }, { headers: corsHeaders })
 
   } catch (err: any) {
     console.error('Chat agent error:', err)
     return NextResponse.json({
       reply: `Connection failed: ${err.message}`
-    }, { status: 500 })
+    }, { status: 500, headers: corsHeaders })
   }
 }

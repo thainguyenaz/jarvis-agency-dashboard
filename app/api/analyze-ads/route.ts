@@ -1,5 +1,15 @@
 import { NextResponse } from 'next/server'
 
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+}
+
+export async function OPTIONS() {
+  return new Response(null, { status: 200, headers: corsHeaders })
+}
+
 export async function POST(req: Request) {
   const { performance, campaigns } = await req.json()
 
@@ -54,8 +64,8 @@ Be direct and specific. No generic advice. Reference the actual numbers.`
     const data = await response.json()
     return NextResponse.json({
       analysis: data.content?.[0]?.text || 'Analysis failed'
-    })
+    }, { headers: corsHeaders })
   } catch {
-    return NextResponse.json({ analysis: 'Error connecting to Claude API' }, { status: 500 })
+    return NextResponse.json({ analysis: 'Error connecting to Claude API' }, { status: 500, headers: corsHeaders })
   }
 }
