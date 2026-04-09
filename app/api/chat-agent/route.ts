@@ -86,19 +86,35 @@ export async function POST(req: Request) {
     if (agentId === '07' && context?.performance) {
       const p = context.performance
       const camps = context.campaigns?.campaigns || []
+
+      const campLines = camps.slice(0, 20).map((c: any) => {
+        const cpl = c.conversions > 0
+          ? `$${Math.round(c.spend / c.conversions)}`
+          : 'No conv'
+        return `  - ${c.campaignName}: $${c.spend?.toFixed(0)} spend, ${c.clicks} clicks, ${Math.round(c.conversions || 0)} conv, CPL ${cpl}, Status: ${c.status === 2 ? 'ENABLED' : 'PAUSED'}`
+      }).join('\n')
+
       contextBlock = `
 
-LIVE ACCOUNT DATA (as of right now):
-- Total Spend (30d): $${p.spend?.toFixed(2) || 'unknown'}
-- Clicks: ${p.clicks || 'unknown'}
-- CPC: $${p.cpc?.toFixed(2) || 'unknown'}
-- Conversions: ${Math.round(p.conversions || 0)}
-- CPL: $${p.cost_per_conversion?.toFixed(2) || 'unknown'}
-- Active campaigns: ${camps.length}
-- Best performer: Facility Showcase PMax at $63.80 CPL
-- Zero-conversion campaign: Detox Treatment ($1,061 spent, 0 conversions)
+LIVE GOOGLE ADS DATA — pulled directly from your account right now:
 
-Use this live data in your response. Do not ask Thai to share data you already have.`
+Account Summary (30 days):
+- Total Spend: $${p.spend?.toFixed(2)}
+- Clicks: ${p.clicks}
+- CPC: $${p.cpc?.toFixed(2)}
+- Conversions: ${Math.round(p.conversions || 0)}
+- CPL: $${p.cost_per_conversion?.toFixed(2)}
+- CTR: ${p.ctr?.toFixed(2)}%
+
+All ${camps.length} Campaigns:
+${campLines}
+
+Key findings already identified:
+- Facility Showcase PMax: BEST performer at ~$63 CPL, 9.52% CVR
+- Detox Treatment: $1,061 spent, ZERO conversions in 4 days
+- Overall CVR at 2.9% vs 5-10% industry benchmark
+
+You have full campaign-level data above. Do not ask Thai to share data. Analyze what you have and give specific recommendations with exact campaign names and dollar amounts.`
     }
 
     const systemPrompt = `${persona}${contextBlock}
