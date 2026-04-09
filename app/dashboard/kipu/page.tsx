@@ -2,48 +2,58 @@
 import { useEffect, useState } from 'react'
 import { api } from '@/lib/api'
 
-const RTC_FACILITIES = ['church', 'frier']
-const OUTPATIENT_FACILITIES = ['indian school', 'indian_school', 'indianschool']
-const SOBER_LIVING_FACILITIES = ['moody']
-const TEST_PATIENT_PATTERNS = ['zzz', 'roger rabbit', 'test', 'billing']
+const RTC_BEDS = 10
+const TEST_PATTERNS = ['zzz', 'roger rabbit', 'test', 'billing']
 
-const RTC_BEDS = 10 // per facility
+function isTest(p: any): boolean {
+  const name = `${p.firstName || ''} ${p.lastName || ''}`.toLowerCase()
+  return TEST_PATTERNS.some(t => name.includes(t))
+}
 
-function isTestPatient(name: string): boolean {
-  return TEST_PATIENT_PATTERNS.some(p =>
-    name.toLowerCase().includes(p.toLowerCase())
+function pct(occupied: number, capacity: number): number {
+  return capacity > 0 ? Math.round((occupied / capacity) * 100) : 0
+}
+
+function OccupancyBar({ value, max }: { value: number; max: number }) {
+  const p = pct(value, max)
+  return (
+    <div className="w-full bg-jarvis-bg rounded-full h-3">
+      <div
+        className={`h-3 rounded-full transition-all ${
+          p === 100 ? 'bg-jarvis-red' :
+          p < 50 ? 'bg-jarvis-red' :
+          p < 70 ? 'bg-jarvis-yellow' :
+          'bg-jarvis-green'
+        }`}
+        style={{ width: `${Math.min(p, 100)}%` }}
+      />
+    </div>
   )
 }
 
-function classifyLocation(name: string): 'rtc' | 'outpatient' | 'sober_living' | 'unknown' {
-  const n = name.toLowerCase()
-  if (RTC_FACILITIES.some(f => n.includes(f))) return 'rtc'
-  if (OUTPATIENT_FACILITIES.some(f => n.includes(f))) return 'outpatient'
-  if (SOBER_LIVING_FACILITIES.some(f => n.includes(f))) return 'sober_living'
-  return 'unknown'
+function statusColor(p: number): string {
+  if (p === 100) return 'text-jarvis-red'
+  if (p < 50) return 'text-jarvis-red'
+  if (p < 70) return 'text-jarvis-yellow'
+  return 'text-jarvis-green'
 }
 
-interface Location {
-  name: string
-  census: number
-  realCensus: number
-  testCount: number
-  type: 'rtc' | 'outpatient' | 'sober_living' | 'unknown'
-  patients?: any[]
+function borderColor(p: number): string {
+  if (p >= 100) return 'border-jarvis-red'
+  if (p < 50) return 'border-jarvis-red border-opacity-60'
+  if (p < 70) return 'border-jarvis-yellow'
+  return 'border-jarvis-green'
 }
 
 export default function CensusPage() {
   const [census, setCensus] = useState<any>(null)
   const [loading, setLoading] = useState(true)
-  const [lastUpdated, setLastUpdated] = useState<string>('')
+  const [updatedAt, setUpdatedAt] = useState('')
 
   useEffect(() => {
     const t = localStorage.getItem('jarvis_token') || ''
     api.getCensus(t)
-      .then(data => {
-        setCensus(data)
-        setLastUpdated(new Date().toLocaleString('en-US', { timeZone: 'America/Phoenix' }))
-      })
+      .then(d => { setCensus(d); setUpdatedAt(new Date().toLocaleString('en-US', { timeZone: 'America/Phoenix' })) })
       .catch(console.error)
       .finally(() => setLoading(false))
   }, [])
@@ -54,218 +64,217 @@ export default function CensusPage() {
     </div>
   )
   if (!census) return (
-    <div className="text-jarvis-red font-mono">Census data unavailable — check Kipu connection</div>
+    <div className="text-jarvis-red font-mono p-4">
+      Census unavailable — check Kipu connection
+    </div>
   )
 
-  // Process locations
-  const rawLocations: Location[] = (census.locations || census.facilities || []).map((loc: any) => {
-    const patients = loc.patients || []
-    const realPatients = patients.filter((p: any) => !isTestPatient(p.name || p.patient_name || ''))
-    return {
-      name: loc.name || loc.facility_name,
-      census: loc.census || loc.patient_count || patients.length,
-      realCensus: realPatients.length,
-      testCount: patients.length - realPatients.length,
-      type: classifyLocation(loc.name || ''),
-      patients: realPatients
-    }
-  })
+  // Filter test patients
+  const allPatients: any[] = (census.patients || []).filter((p: any) => !isTest(p))
 
-  const rtcLocations = rawLocations.filter(l => l.type === 'rtc')
-  const outpatientLocations = rawLocations.filter(l => l.type === 'outpatient')
-  const soberLivingLocations = rawLocations.filter(l => l.type === 'sober_living')
-  const unknownLocations = rawLocations.filter(l => l.type === 'unknown')
+  // RTC patients (Church + Frier)
+  const rtcPatients = allPatients.filter((p: any) =>
+    ['church', 'frier'].some(f => (p.location || '').toLowerCase().includes(f))
+  )
 
-  const rtcOccupied = rtcLocations.reduce((sum, l) => sum + l.realCensus, 0)
-  const rtcCapacity = rtcLocations.length * RTC_BEDS
-  const rtcPct = rtcCapacity > 0 ? Math.round((rtcOccupied / rtcCapacity) * 100) : 0
+  // Outpatient patients (Indian School)
+  const outpatientPatients = allPatients.filter((p: any) =>
+    (p.location || '').toLowerCase().includes('indian')
+  )
 
-  const outpatientTotal = outpatientLocations.reduce((sum, l) => sum + l.realCensus, 0)
+  // PHP/IOP/OP/TMS counts from program field
+  function countProgram(keyword: string): number {
+    return outpatientPatients.filter((p: any) =>
+      (p.program || '').toLowerCase().includes(keyword.toLowerCase())
+    ).length
+  }
+
+  const phpCount = countProgram('php') || outpatientPatients.filter((p: any) =>
+    (p.program || '').toLowerCase().includes('partial')
+  ).length
+  const iopCount = countProgram('iop') || countProgram('intensive')
+  const opCount = countProgram(' op') || countProgram('outpatient')
+  const tmsCount = countProgram('tms') || countProgram('neurostar')
+
+  // If program field doesn't differentiate, show total outpatient as PHP
+  const phpDisplay = phpCount || (iopCount === 0 && opCount === 0 ? outpatientPatients.length : phpCount)
+
+  // Location data from byLocation
+  const byLocation: any[] = census.byLocation || []
+  const church = byLocation.find((l: any) => l.name?.toLowerCase().includes('church'))
+  const frier = byLocation.find((l: any) => l.name?.toLowerCase().includes('frier'))
+  const indianSchool = byLocation.find((l: any) => l.name?.toLowerCase().includes('indian'))
+  const moody = byLocation.find((l: any) => l.name?.toLowerCase().includes('moody'))
+
+  // Use real patient counts (test-filtered) for RTC
+  const churchReal = rtcPatients.filter((p: any) => (p.location || '').toLowerCase().includes('church')).length
+  const frierReal = rtcPatients.filter((p: any) => (p.location || '').toLowerCase().includes('frier')).length
+
+  // Fallback to byLocation census if patients array doesn't have location
+  const churchCount = churchReal || church?.census || 0
+  const frierCount = frierReal || frier?.census || 0
+
+  const rtcTotal = churchCount + frierCount
+  const rtcCapacity = 20
+  const rtcPct = pct(rtcTotal, rtcCapacity)
+  const churchPct = pct(churchCount, RTC_BEDS)
+  const frierPct = pct(frierCount, RTC_BEDS)
 
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold font-mono text-jarvis-cyan tracking-widest">
           KIPU CENSUS — BED BOARD
         </h1>
         <div className="text-jarvis-dim text-xs font-mono">
-          {lastUpdated} MST {census.cached ? '(cached)' : '(live)'}
+          {updatedAt} MST
+          <span className="ml-2 opacity-50">
+            {census.cached ? '● cached' : '● live'} · {census.source}
+          </span>
         </div>
       </div>
 
-      {/* RTC SUMMARY */}
-      <div className="bg-jarvis-surface border border-jarvis-border rounded-lg p-4">
+      {/* RTC OVERALL */}
+      <div className="bg-jarvis-surface border border-jarvis-border rounded-lg p-5">
         <div className="text-jarvis-cyan font-mono font-bold text-sm tracking-wider mb-4">
-          🏥 RESIDENTIAL TREATMENT (RTC)
+          🏥 RESIDENTIAL TREATMENT CENTERS (RTC)
         </div>
-        <div className="grid grid-cols-3 gap-4 mb-6">
-          <div className={`border rounded-lg p-4 ${
-            rtcPct === 100 ? 'border-jarvis-red bg-jarvis-red bg-opacity-5' :
-            rtcPct < 50 ? 'border-jarvis-red' :
-            rtcPct < 70 ? 'border-jarvis-yellow' :
-            'border-jarvis-green'
-          }`}>
+
+        {/* RTC Summary row */}
+        <div className="grid grid-cols-3 gap-4 mb-5">
+          <div className={`border rounded-lg p-4 ${borderColor(rtcPct)}`}>
             <div className="text-xs font-mono text-jarvis-dim mb-1">TOTAL RTC OCCUPANCY</div>
-            <div className={`text-4xl font-bold font-mono ${
-              rtcPct === 100 ? 'text-jarvis-red' :
-              rtcPct < 50 ? 'text-jarvis-red' :
-              rtcPct < 70 ? 'text-jarvis-yellow' :
-              'text-jarvis-green'
-            }`}>{rtcPct}%</div>
+            <div className={`text-4xl font-bold font-mono ${statusColor(rtcPct)}`}>
+              {rtcPct}%
+            </div>
             <div className="text-jarvis-dim text-xs font-mono mt-1">
-              {rtcOccupied}/{rtcCapacity} beds occupied
+              {rtcTotal}/{rtcCapacity} beds
             </div>
             {rtcPct === 100 && (
               <div className="text-jarvis-red text-xs font-mono mt-2 font-bold animate-pulse">
-                ⚠️ AT CAPACITY
+                🚨 AT CAPACITY
               </div>
             )}
           </div>
           <div className="border border-jarvis-border rounded-lg p-4">
             <div className="text-xs font-mono text-jarvis-dim mb-1">AVAILABLE BEDS</div>
             <div className="text-4xl font-bold font-mono text-jarvis-cyan">
-              {rtcCapacity - rtcOccupied}
+              {rtcCapacity - rtcTotal}
             </div>
-            <div className="text-jarvis-dim text-xs font-mono mt-1">across RTC facilities</div>
+            <div className="text-jarvis-dim text-xs font-mono mt-1">across both facilities</div>
           </div>
           <div className="border border-jarvis-border rounded-lg p-4">
-            <div className="text-xs font-mono text-jarvis-dim mb-1">RTC CAPACITY</div>
-            <div className="text-4xl font-bold font-mono text-jarvis-cyan">{rtcCapacity}</div>
-            <div className="text-jarvis-dim text-xs font-mono mt-1">
-              {rtcLocations.length} facilities × {RTC_BEDS} beds
-            </div>
+            <div className="text-xs font-mono text-jarvis-dim mb-1">TOTAL CAPACITY</div>
+            <div className="text-4xl font-bold font-mono text-jarvis-cyan">20</div>
+            <div className="text-jarvis-dim text-xs font-mono mt-1">Frier + Church · 10 beds each</div>
           </div>
         </div>
 
         {/* Individual RTC facilities */}
         <div className="grid grid-cols-2 gap-4">
-          {rtcLocations.map((loc, i) => {
-            const pct = Math.round((loc.realCensus / RTC_BEDS) * 100)
-            return (
-              <div key={i} className={`border rounded-lg p-4 ${
-                pct === 100 ? 'border-jarvis-red' :
-                pct < 50 ? 'border-jarvis-red border-opacity-60' :
-                pct < 70 ? 'border-jarvis-yellow' :
-                'border-jarvis-green'
-              }`}>
-                <div className="flex items-center justify-between mb-3">
-                  <div className="font-mono font-bold text-jarvis-text">
-                    {loc.name.toUpperCase()} (RTC)
-                  </div>
-                  <div className={`font-mono font-bold text-lg ${
-                    pct === 100 ? 'text-jarvis-red' :
-                    pct < 50 ? 'text-jarvis-red' :
-                    pct < 70 ? 'text-jarvis-yellow' :
-                    'text-jarvis-green'
-                  }`}>{pct}%</div>
-                </div>
-                <div className="w-full bg-jarvis-bg rounded-full h-3 mb-3">
-                  <div
-                    className={`h-3 rounded-full transition-all ${
-                      pct === 100 ? 'bg-jarvis-red' :
-                      pct < 50 ? 'bg-jarvis-red' :
-                      pct < 70 ? 'bg-jarvis-yellow' :
-                      'bg-jarvis-green'
-                    }`}
-                    style={{ width: `${pct}%` }}
-                  />
-                </div>
-                <div className="flex justify-between text-xs font-mono text-jarvis-dim">
-                  <span>{loc.realCensus}/{RTC_BEDS} beds</span>
-                  <span>{RTC_BEDS - loc.realCensus} available</span>
-                </div>
-                {loc.testCount > 0 && (
-                  <div className="text-jarvis-yellow text-xs font-mono mt-2 opacity-60">
-                    ⚠️ {loc.testCount} test record(s) excluded
-                  </div>
-                )}
+          {/* CHURCH */}
+          <div className={`border rounded-lg p-4 ${borderColor(churchPct)}`}>
+            <div className="flex items-center justify-between mb-1">
+              <div className="font-mono font-bold text-jarvis-text">CHURCH (RTC)</div>
+              <div className={`font-mono font-bold text-xl ${statusColor(churchPct)}`}>
+                {churchPct}%
               </div>
-            )
-          })}
+            </div>
+            <div className="text-jarvis-dim text-xs font-mono mb-3">
+              Scottsdale · Female Residential · 23222 N Church Rd
+            </div>
+            <OccupancyBar value={churchCount} max={RTC_BEDS} />
+            <div className="flex justify-between text-xs font-mono text-jarvis-dim mt-2">
+              <span>{churchCount}/{RTC_BEDS} beds occupied</span>
+              <span>{RTC_BEDS - churchCount} open</span>
+            </div>
+            {churchPct === 100 && (
+              <div className="text-jarvis-red text-xs font-mono mt-2 font-bold animate-pulse">
+                🚨 AT CAPACITY — SURGE MARKETING ACTIVE
+              </div>
+            )}
+          </div>
+
+          {/* FRIER */}
+          <div className={`border rounded-lg p-4 ${borderColor(frierPct)}`}>
+            <div className="flex items-center justify-between mb-1">
+              <div className="font-mono font-bold text-jarvis-text">FRIER (RTC)</div>
+              <div className={`font-mono font-bold text-xl ${statusColor(frierPct)}`}>
+                {frierPct}%
+              </div>
+            </div>
+            <div className="text-jarvis-dim text-xs font-mono mb-3">
+              Glendale · Male Residential · 8105 W Frier Dr
+            </div>
+            <OccupancyBar value={frierCount} max={RTC_BEDS} />
+            <div className="flex justify-between text-xs font-mono text-jarvis-dim mt-2">
+              <span>{frierCount}/{RTC_BEDS} beds occupied</span>
+              <span>{RTC_BEDS - frierCount} open</span>
+            </div>
+            {frierPct < 50 && (
+              <div className="text-jarvis-red text-xs font-mono mt-2 font-bold">
+                🚨 CRITICAL — BELOW 50% · SURGE CAMPAIGN RECOMMENDED
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
       {/* OUTPATIENT PROGRAMS */}
-      {(outpatientLocations.length > 0 || true) && (
-        <div className="bg-jarvis-surface border border-jarvis-border rounded-lg p-4">
-          <div className="text-jarvis-cyan font-mono font-bold text-sm tracking-wider mb-4">
-            📋 OUTPATIENT PROGRAMS — PHOENIX
-          </div>
-          <div className="grid grid-cols-4 gap-3">
-            {[
-              { label: 'PHP', sublabel: 'Partial Hospitalization',
-                count: outpatientLocations.reduce((sum, l) => {
-                  const phpPatients = (l.patients || []).filter((p: any) =>
-                    (p.level_of_care || p.program || '').toLowerCase().includes('php')
-                  )
-                  return sum + phpPatients.length
-                }, 0) || outpatientTotal
-              },
-              { label: 'IOP', sublabel: 'Intensive Outpatient', count: 0 },
-              { label: 'OP', sublabel: 'Outpatient', count: 0 },
-              { label: 'TMS', sublabel: 'NeuroStar TMS Therapy', count: 0 },
-            ].map((prog, i) => (
-              <div key={i} className="border border-jarvis-border rounded-lg p-4 text-center">
-                <div className="text-xs font-mono text-jarvis-dim mb-1">{prog.label}</div>
-                <div className="text-3xl font-bold font-mono text-jarvis-cyan mb-1">
-                  {prog.count}
-                </div>
-                <div className="text-xs font-mono text-jarvis-dim opacity-60">
-                  {prog.sublabel}
-                </div>
-                {prog.count === 0 && i > 0 && (
-                  <div className="text-jarvis-dim text-xs font-mono mt-1 opacity-40">
-                    newly launched
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-          <div className="text-jarvis-dim text-xs font-mono mt-3 opacity-50">
-            * IOP, OP, TMS headcounts show 0 — programs newly launched.
-            PHP count pulled from Kipu Indian School location.
-          </div>
+      <div className="bg-jarvis-surface border border-jarvis-border rounded-lg p-5">
+        <div className="text-jarvis-cyan font-mono font-bold text-sm tracking-wider mb-1">
+          📋 OUTPATIENT PROGRAMS — PHOENIX
         </div>
-      )}
+        <div className="text-jarvis-dim text-xs font-mono mb-4 opacity-60">
+          4160 N 108th Ave · Headcount only · No bed capacity limit
+        </div>
+        <div className="grid grid-cols-4 gap-3">
+          {[
+            { label: 'PHP', name: 'Partial Hospitalization', count: phpDisplay, live: true },
+            { label: 'IOP', name: 'Intensive Outpatient', count: iopCount, live: false },
+            { label: 'OP', name: 'Outpatient', count: opCount, live: false },
+            { label: 'TMS', name: 'NeuroStar TMS', count: tmsCount, live: false },
+          ].map((prog, i) => (
+            <div key={i} className={`border rounded-lg p-4 text-center ${
+              prog.count > 0 ? 'border-jarvis-green border-opacity-50' : 'border-jarvis-border'
+            }`}>
+              <div className={`text-xs font-mono mb-1 font-bold ${
+                prog.count > 0 ? 'text-jarvis-cyan' : 'text-jarvis-dim'
+              }`}>{prog.label}</div>
+              <div className={`text-4xl font-bold font-mono mb-1 ${
+                prog.count > 0 ? 'text-jarvis-cyan' : 'text-jarvis-dim'
+              }`}>{prog.count}</div>
+              <div className="text-xs font-mono text-jarvis-dim opacity-70">{prog.name}</div>
+              {!prog.live && prog.count === 0 && (
+                <div className="text-jarvis-dim text-xs font-mono mt-2 opacity-40 italic">
+                  newly launched
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+        {indianSchool && (
+          <div className="text-jarvis-dim text-xs font-mono mt-3 opacity-50">
+            Source: Kipu Indian School location · {indianSchool.census} total outpatient patients
+          </div>
+        )}
+      </div>
 
       {/* SOBER LIVING */}
-      {soberLivingLocations.length > 0 && (
-        <div className="bg-jarvis-surface border border-jarvis-border rounded-lg p-4">
-          <div className="text-jarvis-cyan font-mono font-bold text-sm tracking-wider mb-4">
-            🏠 SOBER LIVING — MOODY
+      {moody && (
+        <div className="bg-jarvis-surface border border-jarvis-border rounded-lg p-5">
+          <div className="text-jarvis-cyan font-mono font-bold text-sm tracking-wider mb-1">
+            🏠 SOBER LIVING — MOODY TRAIL
           </div>
-          <div className="text-jarvis-dim text-xs font-mono mb-3 opacity-70">
-            Not included in RTC occupancy calculations
+          <div className="text-jarvis-dim text-xs font-mono mb-4 opacity-60">
+            1623 W Moody Trail · Not included in RTC occupancy
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            {soberLivingLocations.map((loc, i) => (
-              <div key={i} className="border border-jarvis-border rounded-lg p-4">
-                <div className="font-mono font-bold text-jarvis-text mb-2">
-                  {loc.name.toUpperCase()}
-                </div>
-                <div className="text-3xl font-bold font-mono text-jarvis-cyan">
-                  {loc.realCensus}
-                </div>
-                <div className="text-xs font-mono text-jarvis-dim mt-1">current residents</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* UNKNOWN locations — show but flag */}
-      {unknownLocations.length > 0 && (
-        <div className="bg-jarvis-surface border border-jarvis-yellow border-opacity-30 rounded-lg p-4">
-          <div className="text-jarvis-yellow font-mono font-bold text-xs mb-3">
-            ⚠️ UNCLASSIFIED LOCATIONS — VERIFY WITH KIPU
-          </div>
-          <div className="space-y-2">
-            {unknownLocations.map((loc, i) => (
-              <div key={i} className="flex justify-between text-xs font-mono">
-                <span className="text-jarvis-text">{loc.name}</span>
-                <span className="text-jarvis-cyan">{loc.realCensus} patients</span>
-              </div>
-            ))}
+          <div className="border border-jarvis-border rounded-lg p-4 inline-block">
+            <div className="text-xs font-mono text-jarvis-dim mb-1">CURRENT RESIDENTS</div>
+            <div className="text-4xl font-bold font-mono text-jarvis-cyan">
+              {moody.census}
+            </div>
           </div>
         </div>
       )}
