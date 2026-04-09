@@ -1,12 +1,11 @@
-const JARVIS_API = process.env.NEXT_PUBLIC_JARVIS_API_URL || '';
+const PROXY = '/api/proxy';
 
 async function jarvisFetch(path: string, token?: string) {
-  const res = await fetch(`${JARVIS_API}/api/proxy${path}`, {
+  const res = await fetch(`${PROXY}${path}`, {
     headers: {
       'Content-Type': 'application/json',
       ...(token ? { Authorization: `Bearer ${token}` } : {})
     },
-    next: { revalidate: 60 }
   });
   if (!res.ok) throw new Error(`API error: ${res.status}`);
   return res.json();
@@ -15,7 +14,7 @@ async function jarvisFetch(path: string, token?: string) {
 export const api = {
   // Auth
   login: (username: string, password: string) =>
-    fetch(`${JARVIS_API}/api/proxy/api/auth/login`, {
+    fetch(`${PROXY}/api/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username, password })
@@ -49,7 +48,7 @@ export const api = {
 
   // Agents
   getAgentStatus: () =>
-    fetch(`${JARVIS_API}/api/proxy/api/marketing-agency/status`)
+    fetch(`${PROXY}/api/marketing-agency/status`)
       .then(r => r.json()),
 
   // Alerts
