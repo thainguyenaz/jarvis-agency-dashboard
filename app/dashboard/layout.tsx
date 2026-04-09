@@ -40,9 +40,37 @@ export default function DashboardLayout({
   }
 
   return (
-    <div className="min-h-screen flex bg-jarvis-bg">
+    <div className="min-h-screen bg-jarvis-bg">
+      {/* Mobile top nav */}
+      <div className="md:hidden flex items-center justify-between p-4 border-b border-jarvis-border bg-jarvis-surface">
+        <div className="text-jarvis-cyan font-mono font-bold text-sm">
+          🤖 JARVIS 2.0
+        </div>
+        <div className="flex gap-3 overflow-x-auto">
+          {[
+            { href: '/dashboard', label: '📊' },
+            { href: '/dashboard/google-ads', label: '🎯' },
+            { href: '/dashboard/ctm', label: '📞' },
+            { href: '/dashboard/hubspot', label: '🔗' },
+            { href: '/dashboard/kipu', label: '🏥' },
+            { href: '/dashboard/agents', label: '🤖' },
+            { href: '/dashboard/approvals', label: '✅' },
+            { href: '/dashboard/chat', label: '💬' },
+          ].map(item => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className="text-jarvis-dim hover:text-jarvis-cyan text-xl px-1"
+            >
+              {item.label}
+            </Link>
+          ))}
+        </div>
+      </div>
+
+      <div className="flex">
       {/* Sidebar */}
-      <aside className="w-64 border-r border-jarvis-border bg-jarvis-surface flex flex-col">
+      <aside className="hidden md:flex w-64 border-r border-jarvis-border bg-jarvis-surface flex-col">
         <div className="p-6 border-b border-jarvis-border">
           <div className="text-jarvis-cyan font-mono font-bold text-lg tracking-widest">
             🤖 JARVIS 2.0
@@ -87,11 +115,12 @@ export default function DashboardLayout({
       </aside>
 
       {/* Main content */}
-      <main className="flex-1 overflow-auto">
+      <main className="flex-1 overflow-auto w-full">
         <div className="p-6">
           {children}
         </div>
       </main>
+      </div>
     </div>
   )
 }

@@ -81,7 +81,27 @@ export async function POST(req: Request) {
 
     const persona = AGENT_PERSONAS[agentId] || DEFAULT_PERSONA
 
-    const systemPrompt = `${persona}
+    // Inject live data context for relevant agents
+    let contextBlock = ''
+    if (agentId === '07' && context?.performance) {
+      const p = context.performance
+      const camps = context.campaigns?.campaigns || []
+      contextBlock = `
+
+LIVE ACCOUNT DATA (as of right now):
+- Total Spend (30d): $${p.spend?.toFixed(2) || 'unknown'}
+- Clicks: ${p.clicks || 'unknown'}
+- CPC: $${p.cpc?.toFixed(2) || 'unknown'}
+- Conversions: ${Math.round(p.conversions || 0)}
+- CPL: $${p.cost_per_conversion?.toFixed(2) || 'unknown'}
+- Active campaigns: ${camps.length}
+- Best performer: Facility Showcase PMax at $63.80 CPL
+- Zero-conversion campaign: Detox Treatment ($1,061 spent, 0 conversions)
+
+Use this live data in your response. Do not ask Thai to share data you already have.`
+    }
+
+    const systemPrompt = `${persona}${contextBlock}
 
 Always respond in clean paragraphs. Never use bullet points, numbered lists,
 or markdown headers with ###. Write conversationally as if speaking directly

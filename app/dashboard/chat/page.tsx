@@ -59,6 +59,7 @@ function AgentChatContent() {
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [loadingHistory, setLoadingHistory] = useState(false)
+  const [liveContext, setLiveContext] = useState<any>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -68,6 +69,31 @@ function AgentChatContent() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
+
+  useEffect(() => {
+    if (selectedAgent.id === '07') {
+      const t = localStorage.getItem('jarvis_token') || ''
+      Promise.all([
+        fetch('/api/proxy/api/google-ads/performance', {
+          headers: { Authorization: `Bearer ${t}` }
+        }).then(r => r.json()).catch(() => null),
+        fetch('/api/proxy/api/google-ads/campaigns', {
+          headers: { Authorization: `Bearer ${t}` }
+        }).then(r => r.json()).catch(() => null),
+      ]).then(([performance, campaigns]) => {
+        setLiveContext({ performance, campaigns })
+      })
+    } else if (selectedAgent.id === '03' || selectedAgent.id === '18') {
+      const t = localStorage.getItem('jarvis_token') || ''
+      fetch('/api/proxy/api/ga4/overview', {
+        headers: { Authorization: `Bearer ${t}` }
+      }).then(r => r.json()).then(ga4 => {
+        setLiveContext({ ga4 })
+      }).catch(() => null)
+    } else {
+      setLiveContext(null)
+    }
+  }, [selectedAgent])
 
   async function loadConversations() {
     try {
@@ -166,6 +192,7 @@ function AgentChatContent() {
           agentId: selectedAgent.id,
           agentRole: selectedAgent.role,
           agentName: selectedAgent.name,
+          context: liveContext,
           history: messages.slice(-10)
         })
       })
