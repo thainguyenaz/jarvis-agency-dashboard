@@ -113,7 +113,7 @@ export default function GoogleAdsPage() {
               status: 'neutral' },
             { label: 'CLICKS', value: performance.clicks?.toLocaleString() || '—',
               status: 'neutral' },
-            { label: 'CPC', value: `$${(performance.spend/performance.clicks).toFixed(2)}`,
+            { label: 'CPC', value: `$${performance.cpc?.toFixed(2) || '—'}`,
               status: 'neutral' },
             { label: 'CONVERSIONS', value: performance.conversions || '—',
               status: 'neutral' },
