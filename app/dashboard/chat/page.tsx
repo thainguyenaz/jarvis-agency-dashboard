@@ -72,6 +72,10 @@ function AgentChatContent() {
   async function loadConversations() {
     try {
       const res = await fetch(`/api/conversations?agentId=${selectedAgent.id}`)
+      if (!res.ok) {
+        setConversations([])
+        return
+      }
       const data = await res.json()
       setConversations(data.conversations || [])
     } catch {
@@ -84,8 +88,14 @@ function AgentChatContent() {
     setActiveConvId(convId)
     try {
       const res = await fetch(`/api/conversations/${convId}`)
+      if (!res.ok) {
+        setMessages([])
+        return
+      }
       const data = await res.json()
       setMessages(data.messages || [])
+    } catch {
+      setMessages([])
     } finally {
       setLoadingHistory(false)
     }
