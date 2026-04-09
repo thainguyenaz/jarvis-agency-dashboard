@@ -32,6 +32,8 @@ Analyze this data and provide:
 4. GUARDRAIL FLAGS — Which recommendations require Thai approval before execution?
 5. WHAT TO WATCH — What metrics to monitor this week?
 
+Format your entire response in clean paragraphs only. No markdown tables, no bullet points, no headers with ###. Write as a senior media buyer briefing a CEO verbally.
+
 Be direct and specific. No generic advice. Reference the actual numbers.`
 
   try {
