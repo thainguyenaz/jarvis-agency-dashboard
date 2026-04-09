@@ -60,6 +60,7 @@ function AgentChatContent() {
   const [loading, setLoading] = useState(false)
   const [loadingHistory, setLoadingHistory] = useState(false)
   const [liveContext, setLiveContext] = useState<any>(null)
+  const [contextLoading, setContextLoading] = useState(false)
   const [mobileView, setMobileView] = useState<'agents' | 'chat'>('agents')
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
@@ -73,6 +74,7 @@ function AgentChatContent() {
 
   useEffect(() => {
     if (selectedAgent.id === '07') {
+      setContextLoading(true)
       const t = localStorage.getItem('jarvis_token') || ''
       Promise.all([
         fetch('/api/proxy/api/google-ads/performance', {
@@ -83,14 +85,15 @@ function AgentChatContent() {
         }).then(r => r.json()).catch(() => null),
       ]).then(([performance, campaigns]) => {
         setLiveContext({ performance, campaigns })
-      })
+      }).finally(() => setContextLoading(false))
     } else if (selectedAgent.id === '03' || selectedAgent.id === '18') {
+      setContextLoading(true)
       const t = localStorage.getItem('jarvis_token') || ''
       fetch('/api/proxy/api/ga4/overview', {
         headers: { Authorization: `Bearer ${t}` }
       }).then(r => r.json()).then(ga4 => {
         setLiveContext({ ga4 })
-      }).catch(() => null)
+      }).catch(() => null).finally(() => setContextLoading(false))
     } else {
       setLiveContext(null)
     }
@@ -146,6 +149,7 @@ function AgentChatContent() {
 
   async function sendMessage() {
     if (!input.trim() || loading) return
+    console.log('[CHAT] Sending with context:', JSON.stringify(liveContext)?.substring(0, 200))
     const userMsg = input.trim()
     setInput('')
 
@@ -278,6 +282,12 @@ function AgentChatContent() {
             <div className="font-mono font-bold text-jarvis-cyan text-sm">
               AGENT {selectedAgent.id} — {selectedAgent.name.toUpperCase()}
             </div>
+            <div className="text-xs font-mono mt-0.5">
+              {liveContext
+                ? <span className="text-jarvis-green">● Live data connected</span>
+                : <span className="text-jarvis-dim">○ Loading data...</span>
+              }
+            </div>
           </div>
           <button
             onClick={() => window.open(
@@ -344,7 +354,7 @@ function AgentChatContent() {
                   sendMessage()
                 }
               }}
-              placeholder={`Message ${selectedAgent.name}...`}
+              placeholder={contextLoading ? 'Loading live data...' : `Message ${selectedAgent.name}...`}
               rows={2}
               className="flex-1 bg-jarvis-bg border border-jarvis-border rounded-lg
                          px-3 py-2 text-jarvis-text font-mono text-sm
@@ -436,6 +446,12 @@ function AgentChatContent() {
                 AGENT {selectedAgent.id} — {selectedAgent.name.toUpperCase()}
               </div>
               <div className="text-xs font-mono text-jarvis-dim">Phase 1: Advise Only</div>
+              <div className="text-xs font-mono mt-0.5">
+                {liveContext
+                  ? <span className="text-jarvis-green">● Live data connected</span>
+                  : <span className="text-jarvis-dim">○ Loading data...</span>
+                }
+              </div>
             </div>
             <button
               onClick={() => window.open(`/dashboard/chat?agent=${selectedAgent.id}`, 'agent-chat', 'width=900,height=750,scrollbars=yes')}
@@ -482,7 +498,7 @@ function AgentChatContent() {
                 value={input}
                 onChange={e => setInput(e.target.value)}
                 onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage() } }}
-                placeholder={`Message ${selectedAgent.name}... (Enter to send, Shift+Enter for new line)`}
+                placeholder={contextLoading ? 'Loading live data...' : `Message ${selectedAgent.name}... (Enter to send, Shift+Enter for new line)`}
                 rows={3}
                 className="flex-1 bg-jarvis-bg border border-jarvis-border rounded-lg px-4 py-3 text-jarvis-text font-mono text-sm focus:outline-none focus:border-jarvis-cyan resize-none leading-relaxed"
               />
