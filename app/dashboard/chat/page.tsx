@@ -60,6 +60,7 @@ function AgentChatContent() {
   const [loading, setLoading] = useState(false)
   const [loadingHistory, setLoadingHistory] = useState(false)
   const [liveContext, setLiveContext] = useState<any>(null)
+  const [mobileView, setMobileView] = useState<'agents' | 'chat'>('agents')
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -229,155 +230,89 @@ function AgentChatContent() {
   }
 
   return (
-    <div className="flex h-[calc(100vh-80px)] gap-0 -m-6">
+    <div className="flex h-[calc(100vh-80px)] -m-6">
 
-      {/* LEFT SIDEBAR — Agent selector */}
-      <div className="w-48 border-r border-jarvis-border bg-jarvis-surface
-                      flex flex-col flex-shrink-0">
-        <div className="p-3 border-b border-jarvis-border">
-          <div className="text-jarvis-dim text-xs font-mono mb-2">SELECT AGENT</div>
+      {/* MOBILE — Agent selector view */}
+      <div className={`md:hidden flex-col w-full bg-jarvis-surface
+                      ${mobileView === 'agents' ? 'flex' : 'hidden'}`}>
+        <div className="p-4 border-b border-jarvis-border">
+          <div className="text-jarvis-dim text-xs font-mono mb-3 tracking-wider">
+            SELECT AN AGENT
+          </div>
           {AGENTS.map(agent => (
             <button
               key={agent.id}
               onClick={() => {
                 setSelectedAgent(agent)
                 startNewConversation()
+                setMobileView('chat')
               }}
-              className={`w-full text-left px-2 py-2 rounded font-mono text-xs
-                         transition-all mb-1 ${
-                selectedAgent.id === agent.id
-                  ? 'bg-jarvis-cyan bg-opacity-10 text-jarvis-cyan border border-jarvis-cyan border-opacity-30'
-                  : 'text-jarvis-dim hover:text-jarvis-text'
-              }`}
+              className="w-full text-left px-4 py-4 rounded-lg font-mono mb-2
+                         border border-jarvis-border hover:border-jarvis-cyan
+                         transition-all bg-jarvis-bg"
             >
-              <div className="font-bold">AGENT {agent.id}</div>
-              <div className="opacity-70 truncate text-xs">{agent.name}</div>
+              <div className="text-jarvis-cyan font-bold text-sm">
+                AGENT {agent.id}
+              </div>
+              <div className="text-jarvis-text text-sm mt-1">{agent.name}</div>
+              <div className="text-jarvis-dim text-xs mt-1 opacity-60">
+                Phase 1 · Advise Only
+              </div>
             </button>
           ))}
         </div>
       </div>
 
-      {/* MIDDLE SIDEBAR — Conversation history */}
-      <div className="w-56 border-r border-jarvis-border bg-jarvis-bg
-                      flex flex-col flex-shrink-0">
-        <div className="p-3 border-b border-jarvis-border flex items-center justify-between">
-          <div className="text-jarvis-dim text-xs font-mono">CONVERSATIONS</div>
-          <button
-            onClick={startNewConversation}
-            className="text-jarvis-cyan text-xs font-mono hover:text-white"
-            title="New conversation"
-          >
-            + NEW
-          </button>
-        </div>
-
-        <div className="flex-1 overflow-y-auto">
-          {conversations.length === 0 ? (
-            <div className="text-jarvis-dim text-xs font-mono p-3 text-center opacity-50 mt-4">
-              No conversations yet
-            </div>
-          ) : (
-            conversations.map(conv => (
-              <div
-                key={conv.id}
-                onClick={() => loadConversation(conv.id)}
-                className={`p-3 border-b border-jarvis-border border-opacity-30
-                           cursor-pointer group transition-all ${
-                  activeConvId === conv.id
-                    ? 'bg-jarvis-cyan bg-opacity-5 border-l-2 border-l-jarvis-cyan'
-                    : 'hover:bg-jarvis-surface'
-                }`}
-              >
-                <div className="text-jarvis-text text-xs font-mono truncate mb-1">
-                  {conv.title}
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="text-jarvis-dim text-xs font-mono opacity-50">
-                    {formatDate(conv.updated_at)}
-                  </div>
-                  <button
-                    onClick={(e) => deleteConversation(conv.id, e)}
-                    className="text-jarvis-dim hover:text-jarvis-red text-xs
-                               opacity-0 group-hover:opacity-100 transition-opacity"
-                  >
-                    ✕
-                  </button>
-                </div>
-                <div className="text-jarvis-dim text-xs font-mono opacity-40">
-                  {conv.message_count} messages
-                </div>
-              </div>
-            ))
-          )}
-        </div>
-      </div>
-
-      {/* MAIN CHAT AREA */}
-      <div className="flex-1 flex flex-col min-w-0">
-
-        {/* Chat header */}
-        <div className="p-4 border-b border-jarvis-border bg-jarvis-surface
+      {/* MOBILE — Full screen chat view */}
+      <div className={`md:hidden flex-col w-full
+                      ${mobileView === 'chat' ? 'flex' : 'hidden'}`}>
+        <div className="p-3 border-b border-jarvis-border bg-jarvis-surface
                         flex items-center gap-3 flex-shrink-0">
-          <div className="text-2xl">🤖</div>
+          <button
+            onClick={() => setMobileView('agents')}
+            className="text-jarvis-cyan font-mono text-sm px-2 py-1"
+          >
+            ← BACK
+          </button>
           <div className="flex-1">
             <div className="font-mono font-bold text-jarvis-cyan text-sm">
               AGENT {selectedAgent.id} — {selectedAgent.name.toUpperCase()}
-            </div>
-            <div className="text-xs font-mono text-jarvis-dim">
-              Phase 1: Advise Only ·
-              {activeConvId ? ` ${messages.length} messages` : ' New conversation'}
             </div>
           </div>
           <button
             onClick={() => window.open(
               `/dashboard/chat?agent=${selectedAgent.id}`,
               'agent-chat',
-              'width=900,height=750,scrollbars=yes'
+              'width=900,height=750'
             )}
-            className="text-jarvis-dim hover:text-jarvis-cyan font-mono text-xs px-2 py-1
-                       border border-jarvis-border rounded hover:border-jarvis-cyan transition-all"
+            className="text-jarvis-dim text-xs font-mono"
           >
-            ⤢ POPOUT
+            ⤢
           </button>
         </div>
 
-        {/* Messages */}
         <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-0">
-          {loadingHistory && (
-            <div className="text-jarvis-cyan font-mono text-sm text-center animate-pulse">
-              Loading conversation...
-            </div>
-          )}
-
-          {!loadingHistory && messages.length === 0 && (
+          {messages.length === 0 && (
             <div className="flex flex-col items-center justify-center h-full text-center">
               <div className="text-4xl mb-4">🤖</div>
-              <div className="text-jarvis-dim font-mono text-sm mb-2">
-                Start a conversation with {selectedAgent.name}
-              </div>
-              <div className="text-jarvis-dim font-mono text-xs opacity-50">
-                Phase 1 — Advisory mode only
+              <div className="text-jarvis-dim font-mono text-sm">
+                Ask {selectedAgent.name} anything
               </div>
             </div>
           )}
-
           {messages.map((msg, i) => (
             <div key={msg.id || i} className={`flex ${
               msg.role === 'user' ? 'justify-end' : 'justify-start'
             }`}>
-              <div className={`max-w-2xl rounded-lg text-sm font-mono ${
+              <div className={`max-w-[85%] rounded-lg text-sm font-mono px-4 py-3 ${
                 msg.role === 'user'
-                  ? 'bg-jarvis-cyan bg-opacity-10 text-jarvis-cyan border border-jarvis-cyan border-opacity-20 px-4 py-3'
-                  : 'bg-jarvis-surface border border-jarvis-border text-jarvis-text px-4 py-3'
+                  ? 'bg-jarvis-cyan bg-opacity-10 text-jarvis-cyan border border-jarvis-cyan border-opacity-20'
+                  : 'bg-jarvis-surface border border-jarvis-border text-jarvis-text'
               }`}>
-                <div className="flex items-center justify-between mb-2 gap-4">
-                  <div className="text-xs opacity-50">
-                    {msg.role === 'user' ? 'THAI' : `🤖 AGENT ${selectedAgent.id}`}
-                  </div>
+                <div className="text-xs opacity-50 mb-1">
+                  {msg.role === 'user' ? 'THAI' : `🤖 AGENT ${selectedAgent.id}`}
                   {msg.created_at && (
-                    <div className="text-xs opacity-40">
-                      {formatDate(msg.created_at)}
-                    </div>
+                    <span className="ml-2">{formatDate(msg.created_at)}</span>
                   )}
                 </div>
                 <div className="whitespace-pre-wrap leading-relaxed">
@@ -386,21 +321,19 @@ function AgentChatContent() {
               </div>
             </div>
           ))}
-
           {loading && (
             <div className="flex justify-start">
-              <div className="bg-jarvis-surface border border-jarvis-border px-4 py-3
-                             rounded-lg text-sm font-mono text-jarvis-dim animate-pulse">
-                <span className="opacity-50">🤖 AGENT {selectedAgent.id}</span>
-                <div className="mt-1">Thinking...</div>
+              <div className="bg-jarvis-surface border border-jarvis-border
+                             px-4 py-3 rounded-lg text-sm font-mono
+                             text-jarvis-dim animate-pulse">
+                Agent {selectedAgent.id} thinking...
               </div>
             </div>
           )}
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Input area */}
-        <div className="p-4 border-t border-jarvis-border bg-jarvis-surface flex-shrink-0">
+        <div className="p-3 border-t border-jarvis-border bg-jarvis-surface flex-shrink-0">
           <div className="flex gap-2 items-end">
             <textarea
               value={input}
@@ -411,25 +344,157 @@ function AgentChatContent() {
                   sendMessage()
                 }
               }}
-              placeholder={`Message ${selectedAgent.name}... (Enter to send, Shift+Enter for new line)`}
-              rows={3}
+              placeholder={`Message ${selectedAgent.name}...`}
+              rows={2}
               className="flex-1 bg-jarvis-bg border border-jarvis-border rounded-lg
-                         px-4 py-3 text-jarvis-text font-mono text-sm
-                         focus:outline-none focus:border-jarvis-cyan resize-none
-                         leading-relaxed"
+                         px-3 py-2 text-jarvis-text font-mono text-sm
+                         focus:outline-none focus:border-jarvis-cyan resize-none"
             />
             <button
               onClick={sendMessage}
               disabled={loading || !input.trim()}
-              className="bg-jarvis-cyan text-jarvis-bg px-5 py-3 rounded-lg font-mono
-                         text-sm font-bold hover:bg-opacity-80 disabled:opacity-50
-                         transition-all self-end"
+              className="bg-jarvis-cyan text-jarvis-bg px-4 py-3 rounded-lg
+                         font-mono text-sm font-bold disabled:opacity-50"
             >
               SEND
             </button>
           </div>
-          <div className="text-jarvis-dim text-xs font-mono mt-2 opacity-40">
-            Enter to send · Shift+Enter for new line · Conversations saved automatically
+        </div>
+      </div>
+
+      {/* DESKTOP — Three panel layout */}
+      <div className="hidden md:flex flex-1">
+        {/* LEFT — Agent selector */}
+        <div className="w-48 border-r border-jarvis-border bg-jarvis-surface flex flex-col flex-shrink-0">
+          <div className="p-3 border-b border-jarvis-border">
+            <div className="text-jarvis-dim text-xs font-mono mb-2">SELECT AGENT</div>
+            {AGENTS.map(agent => (
+              <button
+                key={agent.id}
+                onClick={() => { setSelectedAgent(agent); startNewConversation() }}
+                className={`w-full text-left px-2 py-2 rounded font-mono text-xs
+                           transition-all mb-1 ${
+                  selectedAgent.id === agent.id
+                    ? 'bg-jarvis-cyan bg-opacity-10 text-jarvis-cyan border border-jarvis-cyan border-opacity-30'
+                    : 'text-jarvis-dim hover:text-jarvis-text'
+                }`}
+              >
+                <div className="font-bold">AGENT {agent.id}</div>
+                <div className="opacity-70 truncate text-xs">{agent.name}</div>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* MIDDLE — Conversation history */}
+        <div className="w-56 border-r border-jarvis-border bg-jarvis-bg flex flex-col flex-shrink-0">
+          <div className="p-3 border-b border-jarvis-border flex items-center justify-between">
+            <div className="text-jarvis-dim text-xs font-mono">CONVERSATIONS</div>
+            <button onClick={startNewConversation} className="text-jarvis-cyan text-xs font-mono">+ NEW</button>
+          </div>
+          <div className="flex-1 overflow-y-auto">
+            {conversations.length === 0 ? (
+              <div className="text-jarvis-dim text-xs font-mono p-3 text-center opacity-50 mt-4">
+                No conversations yet
+              </div>
+            ) : (
+              conversations.map(conv => (
+                <div
+                  key={conv.id}
+                  onClick={() => loadConversation(conv.id)}
+                  className={`p-3 border-b border-jarvis-border border-opacity-30
+                             cursor-pointer group transition-all ${
+                    activeConvId === conv.id
+                      ? 'bg-jarvis-cyan bg-opacity-5 border-l-2 border-l-jarvis-cyan'
+                      : 'hover:bg-jarvis-surface'
+                  }`}
+                >
+                  <div className="text-jarvis-text text-xs font-mono truncate mb-1">
+                    {conv.title}
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="text-jarvis-dim text-xs font-mono opacity-50">
+                      {formatDate(conv.updated_at)}
+                    </div>
+                    <button
+                      onClick={(e) => deleteConversation(conv.id, e)}
+                      className="text-jarvis-dim hover:text-jarvis-red text-xs opacity-0 group-hover:opacity-100"
+                    >✕</button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+
+        {/* RIGHT — Main chat */}
+        <div className="flex-1 flex flex-col min-w-0">
+          <div className="p-4 border-b border-jarvis-border bg-jarvis-surface flex items-center gap-3 flex-shrink-0">
+            <div className="text-2xl">🤖</div>
+            <div className="flex-1">
+              <div className="font-mono font-bold text-jarvis-cyan text-sm">
+                AGENT {selectedAgent.id} — {selectedAgent.name.toUpperCase()}
+              </div>
+              <div className="text-xs font-mono text-jarvis-dim">Phase 1: Advise Only</div>
+            </div>
+            <button
+              onClick={() => window.open(`/dashboard/chat?agent=${selectedAgent.id}`, 'agent-chat', 'width=900,height=750,scrollbars=yes')}
+              className="text-jarvis-dim hover:text-jarvis-cyan font-mono text-xs px-2 py-1 border border-jarvis-border rounded hover:border-jarvis-cyan transition-all"
+            >⤢ POPOUT</button>
+          </div>
+
+          <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-0">
+            {messages.length === 0 && (
+              <div className="flex flex-col items-center justify-center h-full text-center">
+                <div className="text-4xl mb-4">🤖</div>
+                <div className="text-jarvis-dim font-mono text-sm mb-2">Start a conversation with {selectedAgent.name}</div>
+              </div>
+            )}
+            {messages.map((msg, i) => (
+              <div key={msg.id || i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                <div className={`max-w-2xl rounded-lg text-sm font-mono ${
+                  msg.role === 'user'
+                    ? 'bg-jarvis-cyan bg-opacity-10 text-jarvis-cyan border border-jarvis-cyan border-opacity-20 px-4 py-3'
+                    : 'bg-jarvis-surface border border-jarvis-border text-jarvis-text px-4 py-3'
+                }`}>
+                  <div className="flex items-center justify-between mb-2 gap-4">
+                    <div className="text-xs opacity-50">{msg.role === 'user' ? 'THAI' : `🤖 AGENT ${selectedAgent.id}`}</div>
+                    {msg.created_at && <div className="text-xs opacity-40">{formatDate(msg.created_at)}</div>}
+                  </div>
+                  <div className="whitespace-pre-wrap leading-relaxed">{msg.content}</div>
+                </div>
+              </div>
+            ))}
+            {loading && (
+              <div className="flex justify-start">
+                <div className="bg-jarvis-surface border border-jarvis-border px-4 py-3 rounded-lg text-sm font-mono text-jarvis-dim animate-pulse">
+                  <span className="opacity-50">🤖 AGENT {selectedAgent.id}</span>
+                  <div className="mt-1">Thinking...</div>
+                </div>
+              </div>
+            )}
+            <div ref={messagesEndRef} />
+          </div>
+
+          <div className="p-4 border-t border-jarvis-border bg-jarvis-surface flex-shrink-0">
+            <div className="flex gap-2 items-end">
+              <textarea
+                value={input}
+                onChange={e => setInput(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage() } }}
+                placeholder={`Message ${selectedAgent.name}... (Enter to send, Shift+Enter for new line)`}
+                rows={3}
+                className="flex-1 bg-jarvis-bg border border-jarvis-border rounded-lg px-4 py-3 text-jarvis-text font-mono text-sm focus:outline-none focus:border-jarvis-cyan resize-none leading-relaxed"
+              />
+              <button
+                onClick={sendMessage}
+                disabled={loading || !input.trim()}
+                className="bg-jarvis-cyan text-jarvis-bg px-5 py-3 rounded-lg font-mono text-sm font-bold hover:bg-opacity-80 disabled:opacity-50 transition-all self-end"
+              >SEND</button>
+            </div>
+            <div className="text-jarvis-dim text-xs font-mono mt-2 opacity-40">
+              Enter to send · Shift+Enter for new line
+            </div>
           </div>
         </div>
       </div>
