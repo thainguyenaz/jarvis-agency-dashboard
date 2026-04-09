@@ -114,6 +114,15 @@ Key findings already identified:
 - Detox Treatment: $1,061 spent, ZERO conversions in 4 days
 - Overall CVR at 2.9% vs 5-10% industry benchmark
 
+KEY LANDING PAGE DATA FROM GA4:
+- Best converting page: /addiction-mental-health-treatment-facilities-lp — 176 conversions, 13.01% CVR, 1,353 sessions — this is likely a dedicated Google Ads LP
+- Homepage: 23 conversions, 16.91% CVR
+- Form completion rate: 66% (247 starts, 163 submits)
+- CTM inbound calls: 174 (all tracked as conversions)
+- The Detox Treatment campaign zero conversions are likely a landing page mismatch — clicks going to wrong page
+
+When analyzing campaigns, cross-reference with these landing page CVRs. The addiction LP at 13% CVR is the benchmark.
+
 You have full campaign-level data above. Do not ask Thai to share data. Analyze what you have and give specific recommendations with exact campaign names and dollar amounts.`
     }
 
