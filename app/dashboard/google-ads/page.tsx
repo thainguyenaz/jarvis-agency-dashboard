@@ -81,7 +81,7 @@ export default function GoogleAdsPage() {
   }
 
   const cpl = performance ?
-    Math.round((performance.cost / 1000000) / (performance.conversions || 1)) : 0
+    Math.round(performance.cost_per_conversion || 0) : 0
 
   if (loading) return (
     <div className="flex items-center justify-center h-64">
@@ -109,11 +109,11 @@ export default function GoogleAdsPage() {
       {performance && (
         <div className="grid grid-cols-5 gap-3">
           {[
-            { label: 'TOTAL SPEND', value: `$${(performance.cost/1000000).toFixed(1)}K`,
+            { label: 'TOTAL SPEND', value: `$${(performance.spend/1000).toFixed(1)}K`,
               status: 'neutral' },
             { label: 'CLICKS', value: performance.clicks?.toLocaleString() || '—',
               status: 'neutral' },
-            { label: 'CPC', value: `$${(performance.cost/1000000/performance.clicks).toFixed(2)}`,
+            { label: 'CPC', value: `$${(performance.spend/performance.clicks).toFixed(2)}`,
               status: 'neutral' },
             { label: 'CONVERSIONS', value: performance.conversions || '—',
               status: 'neutral' },
@@ -175,7 +175,7 @@ export default function GoogleAdsPage() {
               <tbody>
                 {campaigns.map((c: any, i: number) => {
                   const campCpl = c.metrics ?
-                    Math.round((c.metrics.cost_micros/1000000) / (c.metrics.conversions || 1)) : 0
+                    Math.round((c.metrics.spend || c.metrics.cost || 0) / (c.metrics.conversions || 1)) : 0
                   return (
                     <tr key={i} className="border-b border-jarvis-border border-opacity-30
                                           hover:bg-jarvis-bg transition-colors">
@@ -192,7 +192,7 @@ export default function GoogleAdsPage() {
                         </span>
                       </td>
                       <td className="py-2 pr-4 text-right text-jarvis-text">
-                        ${c.metrics ? (c.metrics.cost_micros/1000000).toFixed(0) : '—'}
+                        ${c.metrics ? (c.metrics.spend || c.metrics.cost || 0).toFixed(0) : '—'}
                       </td>
                       <td className="py-2 pr-4 text-right text-jarvis-text">
                         {c.metrics?.clicks?.toLocaleString() || '—'}

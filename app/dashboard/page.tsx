@@ -38,33 +38,33 @@ export default function OverviewPage() {
       const cards: MetricCard[] = [
         {
           label: 'OVERALL OCCUPANCY',
-          value: censusData ? `${Math.round((censusData.total_patients / 20) * 100)}%` : '—',
-          sub: censusData ? `${censusData.total_patients}/20 beds` : 'No data',
-          status: censusData?.total_patients < 10 ? 'critical' : censusData?.total_patients < 14 ? 'warn' : 'good'
+          value: censusData ? `${Math.round((censusData.totalCensus / 20) * 100)}%` : '—',
+          sub: censusData ? `${censusData.totalCensus}/20 beds` : 'No data',
+          status: censusData?.totalCensus < 10 ? 'critical' : censusData?.totalCensus < 14 ? 'warn' : 'good'
         },
         {
           label: 'AD SPEND (30D)',
-          value: adsData ? `$${(adsData.cost / 1000000).toFixed(1)}K` : '—',
-          sub: adsData ? `$${(adsData.cost / 1000000 / 30).toFixed(0)}/day avg` : 'No data',
+          value: adsData ? `$${(adsData.spend / 1000).toFixed(1)}K` : '—',
+          sub: adsData ? `$${(adsData.spend / 30).toFixed(0)}/day avg` : 'No data',
           status: 'neutral'
         },
         {
           label: 'COST PER LEAD',
-          value: adsData ? `$${Math.round(adsData.cost / 1000000 / (adsData.conversions || 1))}` : '—',
+          value: adsData ? `$${Math.round(adsData.cost_per_conversion || 0)}` : '—',
           sub: 'Target: <$150',
-          status: adsData && (adsData.cost / 1000000 / (adsData.conversions || 1)) > 400 ? 'critical' :
-                  adsData && (adsData.cost / 1000000 / (adsData.conversions || 1)) > 200 ? 'warn' : 'good'
+          status: adsData && (adsData.cost_per_conversion) > 400 ? 'critical' :
+                  adsData && (adsData.cost_per_conversion) > 200 ? 'warn' : 'good'
         },
         {
           label: 'CALL ANSWER RATE',
           value: ctmData ? `${ctmData.answer_rate}%` : '—',
-          sub: ctmData ? `${ctmData.total_calls} total calls` : 'No data',
+          sub: ctmData ? `${ctmData.total_calls_30d} total calls` : 'No data',
           status: ctmData?.answer_rate < 60 ? 'critical' : ctmData?.answer_rate < 75 ? 'warn' : 'good'
         },
         {
           label: 'OPEN DEALS',
           value: hubspotData ? `${hubspotData.total_deals || 0}` : '—',
-          sub: hubspotData ? `${hubspotData.closed_won || 0} closed won` : 'No data',
+          sub: hubspotData ? `${hubspotData.deals_by_stage?.closedwon?.count || 0} closed won` : 'No data',
           status: 'neutral'
         },
         {
