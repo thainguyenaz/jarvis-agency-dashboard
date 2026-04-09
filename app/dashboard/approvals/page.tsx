@@ -10,8 +10,11 @@ export default function ApprovalsPage() {
     fetch('/api/proxy/api/agents/pending-approvals', {
       headers: { Authorization: `Bearer ${t}` }
     })
-      .then(r => r.json())
-      .then(d => setApprovals(d.approvals || d || []))
+      .then(r => {
+        if (!r.ok) return []
+        return r.json().then(d => d.approvals || d || [])
+      })
+      .then(setApprovals)
       .catch(() => setApprovals([]))
       .finally(() => setLoading(false))
   }, [])
@@ -27,7 +30,7 @@ export default function ApprovalsPage() {
           <div className="text-4xl mb-4">✅</div>
           <div className="text-jarvis-green font-mono font-bold">NO PENDING APPROVALS</div>
           <div className="text-jarvis-dim text-xs font-mono mt-2">
-            Agent 07 will send approval requests here when recommending Google Ads changes
+            Agent 07 will send approval requests here when recommending Google Ads changes requiring your sign-off.
           </div>
         </div>
       ) : (
