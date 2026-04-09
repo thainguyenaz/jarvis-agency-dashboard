@@ -22,15 +22,32 @@ const PHASE_COLORS: Record<string, string> = {
 
 export default function AgentsPage() {
   const [agentData, setAgentData] = useState<any>(null)
+  const [apiHealth, setApiHealth] = useState<any>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    api.getAgentStatus().then(setAgentData).catch(console.error).finally(() => setLoading(false))
+    Promise.allSettled([
+      api.getAgentStatus(),
+      api.getApiHealth(),
+    ]).then(([agentRes, healthRes]) => {
+      if (agentRes.status === 'fulfilled') setAgentData(agentRes.value)
+      if (healthRes.status === 'fulfilled') setApiHealth(healthRes.value)
+    }).finally(() => setLoading(false))
   }, [])
 
   if (loading) return <div className="flex items-center justify-center h-64 text-jarvis-cyan font-mono animate-pulse">LOADING AGENT DATA...</div>
+  if (!agentData) return (
+    <div className="bg-jarvis-surface border border-jarvis-red border-opacity-30 rounded-lg p-8 text-center">
+      <div className="text-jarvis-red font-mono font-bold mb-2">DATA UNAVAILABLE</div>
+      <div className="text-jarvis-dim text-xs font-mono">
+        Check VPS connection ·
+        <button onClick={() => window.location.reload()} className="text-jarvis-cyan ml-1 hover:underline">Retry</button>
+      </div>
+    </div>
+  )
 
   const agents = agentData?.agents || []
+  const apiAgents = apiHealth?.agents || []
 
   return (
     <div className="space-y-6">
@@ -40,6 +57,32 @@ export default function AgentsPage() {
           PHASE 1 — MONITOR & ADVISE ONLY
         </div>
       </div>
+
+      {/* API Health Status */}
+      {apiHealth && (
+        <div className={`bg-jarvis-surface border rounded-lg p-4 ${
+          apiHealth.status === 'ONLINE' ? 'border-jarvis-green border-opacity-50' : 'border-jarvis-red border-opacity-50'
+        }`}>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <span className={`text-sm ${apiHealth.status === 'ONLINE' ? 'text-jarvis-green' : 'text-jarvis-red'}`}>●</span>
+              <span className="text-xs font-mono text-jarvis-text">{apiHealth.agent || 'Jarvis Marketing Agency'}</span>
+            </div>
+            <span className={`text-xs font-mono font-bold ${
+              apiHealth.status === 'ONLINE' ? 'text-jarvis-green' : 'text-jarvis-red'
+            }`}>{apiHealth.status}</span>
+          </div>
+          {apiAgents.length > 0 && (
+            <div className="flex flex-wrap gap-2 mt-3">
+              {apiAgents.map((name: string) => (
+                <span key={name} className="text-xs font-mono px-2 py-1 bg-jarvis-bg border border-jarvis-border rounded text-jarvis-dim">
+                  {name}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="grid grid-cols-4 gap-3">
         {['active', 'monitor-only', 'phase-locked', 'idle'].map(status => {
@@ -78,6 +121,13 @@ export default function AgentsPage() {
                 <td className="py-3 px-4 text-jarvis-dim">{agent.phase || '—'}</td>
               </tr>
             ))}
+            {agents.length === 0 && (
+              <tr>
+                <td colSpan={5} className="py-8 text-center text-jarvis-dim">
+                  No agent data available — agency service may be starting up
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>

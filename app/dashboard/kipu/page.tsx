@@ -64,8 +64,12 @@ export default function CensusPage() {
     </div>
   )
   if (!census) return (
-    <div className="text-jarvis-red font-mono p-4">
-      Census unavailable — check Kipu connection
+    <div className="bg-jarvis-surface border border-jarvis-red border-opacity-30 rounded-lg p-8 text-center">
+      <div className="text-jarvis-red font-mono font-bold mb-2">DATA UNAVAILABLE</div>
+      <div className="text-jarvis-dim text-xs font-mono">
+        Check VPS connection ·
+        <button onClick={() => window.location.reload()} className="text-jarvis-cyan ml-1 hover:underline">Retry</button>
+      </div>
     </div>
   )
 

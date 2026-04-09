@@ -41,6 +41,8 @@ export const api = {
   // HubSpot
   getHubSpotPipeline: (token: string) =>
     jarvisFetch('/api/hubspot/pipeline', token),
+  getHubSpotContacts: (token: string) =>
+    jarvisFetch('/api/hubspot/contacts', token),
 
   // QBO
   getFinanceOverview: (token: string) =>
@@ -49,6 +51,9 @@ export const api = {
   // Agents
   getAgentStatus: () =>
     fetch(`${PROXY}/api/marketing-agency/status`)
+      .then(r => r.json()),
+  getApiHealth: () =>
+    fetch(`${PROXY}/health`)
       .then(r => r.json()),
 
   // Alerts

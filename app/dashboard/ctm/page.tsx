@@ -12,9 +12,19 @@ export default function CTMPage() {
   }, [])
 
   if (loading) return <div className="flex items-center justify-center h-64 text-jarvis-cyan font-mono animate-pulse">LOADING CTM DATA...</div>
-  if (!data) return <div className="text-jarvis-red font-mono">CTM data unavailable</div>
+  if (!data) return (
+    <div className="bg-jarvis-surface border border-jarvis-red border-opacity-30 rounded-lg p-8 text-center">
+      <div className="text-jarvis-red font-mono font-bold mb-2">DATA UNAVAILABLE</div>
+      <div className="text-jarvis-dim text-xs font-mono">
+        Check VPS connection ·
+        <button onClick={() => window.location.reload()} className="text-jarvis-cyan ml-1 hover:underline">Retry</button>
+      </div>
+    </div>
+  )
 
-  const sources = data.top_sources || data.sources || []
+  const sources = data.top_sources ||
+    Object.entries(data.calls_by_source || {}).map(([source, calls]) => ({ source, calls })) ||
+    []
 
   return (
     <div className="space-y-6">
@@ -22,9 +32,9 @@ export default function CTMPage() {
 
       <div className="grid grid-cols-4 gap-4">
         {[
-          { label: 'TOTAL CALLS (30D)', value: data.total_calls_30d || data.total_calls || '—', status: 'neutral' },
+          { label: 'TOTAL CALLS (30D)', value: data.total_calls_30d || '—', status: 'neutral' },
           { label: 'ANSWERED', value: data.total_answered || data.answered || '—', status: 'good' },
-          { label: 'MISSED', value: data.total_missed || data.missed || '—', status: (data.total_missed || data.missed || 0) > 150 ? 'critical' : 'warn' },
+          { label: 'MISSED', value: data.total_missed || data.missed_calls || '—', status: (data.total_missed || 0) > 150 ? 'critical' : 'warn' },
           { label: 'ANSWER RATE', value: `${data.answer_rate || '—'}%`, status: (data.answer_rate || 0) < 70 ? 'critical' : (data.answer_rate || 0) < 80 ? 'warn' : 'good' },
         ].map((m, i) => (
           <div key={i} className={`bg-jarvis-surface border rounded-lg p-4 ${
@@ -49,13 +59,13 @@ export default function CTMPage() {
           <h2 className="text-jarvis-cyan font-mono font-bold mb-4 tracking-wider">CALLS BY SOURCE</h2>
           <div className="space-y-3">
             {sources.map((s: any, i: number) => {
-              const total = data.total_calls_30d || data.total_calls || 1
-              const count = s.calls || s.count || s.total || 0
-              const pct = Math.round((count / total) * 100)
+              const total = data.total_calls_30d || 1
+              const count = s.calls || s.count || s.total || (typeof Object.values(s)[0] === 'number' ? Object.values(s)[0] : 0)
+              const pct = Math.round(((count as number) / total) * 100)
               return (
                 <div key={i} className="flex items-center gap-4">
                   <div className="w-40 text-xs font-mono text-jarvis-text truncate">
-                    {s.source || s.name || s.medium || 'Unknown'}
+                    {s.source || s.name || s.medium || Object.keys(s)[0] || 'Unknown'}
                   </div>
                   <div className="flex-1 bg-jarvis-bg rounded-full h-2">
                     <div
