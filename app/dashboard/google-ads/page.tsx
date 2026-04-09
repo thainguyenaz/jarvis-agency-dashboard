@@ -141,10 +141,10 @@ export default function GoogleAdsPage() {
       {/* Guardrails reminder */}
       <div className="bg-jarvis-surface border border-jarvis-yellow border-opacity-30
                       rounded-lg p-4">
-        <div className="text-jarvis-yellow font-mono text-xs font-bold mb-2">
+        <div className="text-jarvis-yellow font-mono text-sm font-bold mb-2">
           ⚠️ GOOGLE ADS GUARDRAILS ACTIVE
         </div>
-        <div className="grid grid-cols-3 gap-4 text-xs font-mono text-jarvis-dim">
+        <div className="grid grid-cols-3 gap-4 text-sm font-mono text-jarvis-dim">
           <div>• Max 2 changes per campaign per week</div>
           <div>• Max bid adjustment: 20% (safe: 15%)</div>
           <div>• Budget changes require approval if &gt;30%</div>
@@ -161,7 +161,7 @@ export default function GoogleAdsPage() {
             CAMPAIGN PERFORMANCE
           </h2>
           <div className="overflow-x-auto">
-            <table className="w-full text-xs font-mono">
+            <table className="w-full text-sm font-mono">
               <thead>
                 <tr className="text-jarvis-dim border-b border-jarvis-border">
                   <th className="text-left py-2 pr-4">CAMPAIGN</th>
@@ -183,7 +183,7 @@ export default function GoogleAdsPage() {
                         {c.campaignName || 'Unknown'}
                       </td>
                       <td className="py-2 pr-4 text-right">
-                        <span className={`px-2 py-0.5 rounded text-xs ${
+                        <span className={`px-2 py-0.5 rounded text-sm ${
                           c.status === 2
                             ? 'bg-jarvis-green bg-opacity-20 text-jarvis-green'
                             : 'bg-jarvis-red bg-opacity-20 text-jarvis-red'
@@ -221,14 +221,14 @@ export default function GoogleAdsPage() {
         <h2 className="text-jarvis-cyan font-mono font-bold mb-4 tracking-wider">
           💬 AGENT 07 — GOOGLE ADS ADVISOR
         </h2>
-        <div className="h-64 overflow-y-auto bg-jarvis-bg rounded p-3 mb-3 space-y-3">
+        <div className="h-[500px] overflow-y-auto bg-jarvis-bg rounded p-3 mb-3 space-y-3">
           {chatHistory.length === 0 && (
-            <div className="text-jarvis-dim text-xs font-mono text-center mt-8">
+            <div className="text-jarvis-dim text-sm font-mono text-center mt-8">
               Click &quot;RUN AI ANALYSIS&quot; or ask Agent 07 a question below
             </div>
           )}
           {chatHistory.map((msg, i) => (
-            <div key={i} className={`text-xs font-mono ${
+            <div key={i} className={`text-sm font-mono ${
               msg.role === 'user' ? 'text-right' : 'text-left'
             }`}>
               <span className={`inline-block max-w-lg px-3 py-2 rounded ${
@@ -245,20 +245,20 @@ export default function GoogleAdsPage() {
           ))}
         </div>
         <div className="flex gap-2">
-          <input
-            type="text"
+          <textarea
+            rows={3}
             value={chatInput}
             onChange={e => setChatInput(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && sendChat()}
+            onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChat() } }}
             placeholder="Ask Agent 07 about your Google Ads performance..."
             className="flex-1 bg-jarvis-bg border border-jarvis-border rounded px-3 py-2
-                       text-jarvis-text font-mono text-xs focus:outline-none
-                       focus:border-jarvis-cyan"
+                       text-jarvis-text font-mono text-sm focus:outline-none
+                       focus:border-jarvis-cyan resize-none"
           />
           <button
             onClick={sendChat}
             className="bg-jarvis-cyan text-jarvis-bg px-4 py-2 rounded font-mono
-                       text-xs font-bold hover:bg-opacity-80"
+                       text-sm font-bold hover:bg-opacity-80"
           >
             SEND
           </button>
