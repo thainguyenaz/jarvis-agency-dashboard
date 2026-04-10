@@ -259,6 +259,41 @@ RECOMMENDATION FRAMEWORK:
 - A "conversion" in Google Ads does NOT mean a qualified lead — cross-reference with CTM quality scores
 
 You have full campaign-level data above. Do not ask Thai to share data. Analyze what you have and give specific recommendations with exact campaign names and dollar amounts.`
+
+      // Live CTM quality data injection
+      const cq = context.campaignQuality
+      const ctmQ = context.ctmQuality
+
+      if (cq?.campaigns) {
+        contextBlock += `\n\nCTM QUALITY CORRELATION (live data):\n`
+        contextBlock += `Account qualification rate: ${cq.account_summary?.account_qualification_rate}%\n`
+        contextBlock += `Blended qualified CPL: $${cq.account_summary?.blended_qualified_cpl}\n\n`
+        contextBlock += `CAMPAIGN TRUE QUALIFIED CPL:\n`
+        cq.campaigns.forEach((c: any) => {
+          if (c.ad_spend > 0) {
+            contextBlock += `- ${c.campaign}: $${c.ad_spend} spend, ${c.qualified_leads} qualified leads (4-5★), qualified CPL: $${c.qualified_cpl || 'NONE'}, avg duration: ${c.avg_duration_seconds}s, verdict: ${c.verdict}\n`
+          }
+        })
+      }
+
+      if (ctmQ?.summary) {
+        contextBlock += `\nCTM QUALITY SUMMARY (30 days):\n`
+        contextBlock += `Total calls: ${ctmQ.summary.total_calls}\n`
+        contextBlock += `5-star qualified: ${ctmQ.summary.five_star_count}\n`
+        contextBlock += `4-star potential: ${ctmQ.summary.four_star_count}\n`
+        contextBlock += `Overall qual rate: ${ctmQ.summary.overall_qualification_rate}%\n`
+
+        if (ctmQ.by_source) {
+          contextBlock += `\nQUALIFIED LEADS BY SOURCE:\n`
+          ctmQ.by_source.slice(0, 8).forEach((s: any) => {
+            contextBlock += `- ${s.source}: ${s.qualified} qualified (${s.five_star} five-star), ${s.qualification_rate}% qual rate\n`
+          })
+        }
+      }
+
+      contextBlock += `\nKEY INSIGHT: True qualified CPL is 2-3x higher than Google-reported CPL because most Google conversions are low-quality calls. Always reference CTM star ratings, not Google conversion counts.\n`
+      contextBlock += `PMax avg call duration: 7 seconds = hangups, not leads.\n`
+      contextBlock += `Detox Treatment: PAUSED as of April 10, 2026.\n`
     }
 
     const systemPrompt = `${persona}${contextBlock}

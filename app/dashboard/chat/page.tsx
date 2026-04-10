@@ -61,7 +61,7 @@ function AgentChatContent() {
   const [loadingHistory, setLoadingHistory] = useState(false)
   const [liveContext, setLiveContext] = useState<any>(null)
   const [contextLoading, setContextLoading] = useState(false)
-  const [mobileView, setMobileView] = useState<'agents' | 'chat'>('agents')
+  const [mobileView, setMobileView] = useState<'agents' | 'history' | 'chat'>('agents')
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -105,8 +105,14 @@ function AgentChatContent() {
         fetch('/api/proxy/api/google-ads/campaigns', {
           headers: { Authorization: `Bearer ${t}` }
         }).then(r => r.json()).catch(() => null),
-      ]).then(([performance, campaigns]) => {
-        setLiveContext({ performance, campaigns })
+        fetch('/api/proxy/api/ctm/quality-report?days=30', {
+          headers: { Authorization: `Bearer ${t}` }
+        }).then(r => r.json()).catch(() => null),
+        fetch('/api/proxy/api/ctm/campaign-quality?days=30', {
+          headers: { Authorization: `Bearer ${t}` }
+        }).then(r => r.json()).catch(() => null),
+      ]).then(([performance, campaigns, ctmQuality, campaignQuality]) => {
+        setLiveContext({ performance, campaigns, ctmQuality, campaignQuality })
       }).finally(() => setContextLoading(false))
     } else if (selectedAgent.id === '03' || selectedAgent.id === '18') {
       setContextLoading(true)
@@ -271,7 +277,7 @@ function AgentChatContent() {
               onClick={() => {
                 setSelectedAgent(agent)
                 startNewConversation()
-                setMobileView('chat')
+                setMobileView('history')
               }}
               className="w-full text-left px-4 py-4 rounded-lg font-mono mb-2
                          border border-jarvis-border hover:border-jarvis-cyan
@@ -289,16 +295,71 @@ function AgentChatContent() {
         </div>
       </div>
 
+      {/* MOBILE — Conversation history view */}
+      <div className={`md:hidden flex-col w-full bg-jarvis-bg
+                      ${mobileView === 'history' ? 'flex' : 'hidden'}`}>
+        <div className="p-3 border-b border-jarvis-border bg-jarvis-surface
+                        flex items-center justify-between flex-shrink-0">
+          <button
+            onClick={() => setMobileView('agents')}
+            className="text-jarvis-cyan font-mono text-sm px-2 py-1"
+          >
+            ← AGENTS
+          </button>
+          <div className="font-mono font-bold text-jarvis-cyan text-sm truncate mx-2">
+            AGENT {selectedAgent.id}
+          </div>
+          <button
+            onClick={() => { startNewConversation(); setMobileView('chat') }}
+            className="text-jarvis-cyan font-mono text-sm px-2 py-1"
+          >
+            + NEW
+          </button>
+        </div>
+        <div className="flex-1 overflow-y-auto">
+          {conversations.length === 0 ? (
+            <div className="text-jarvis-dim text-xs font-mono p-6 text-center opacity-50 mt-8">
+              No conversations yet.
+              <br />Tap + NEW to start one.
+            </div>
+          ) : (
+            conversations.map(conv => (
+              <div
+                key={conv.id}
+                onClick={() => { loadConversation(conv.id); setMobileView('chat') }}
+                className="p-4 border-b border-jarvis-border border-opacity-30
+                           cursor-pointer group transition-all active:bg-jarvis-surface"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex-1 min-w-0">
+                    <div className="text-jarvis-text text-sm font-mono truncate">
+                      {conv.title}
+                    </div>
+                    <div className="text-jarvis-dim text-xs font-mono opacity-50 mt-1">
+                      {formatDate(conv.updated_at)} · {conv.message_count} msgs
+                    </div>
+                  </div>
+                  <button
+                    onClick={(e) => deleteConversation(conv.id, e)}
+                    className="text-jarvis-dim hover:text-jarvis-red text-sm px-2 py-1 opacity-40"
+                  >✕</button>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+
       {/* MOBILE — Full screen chat view */}
       <div className={`md:hidden flex-col w-full
                       ${mobileView === 'chat' ? 'flex' : 'hidden'}`}>
         <div className="p-3 border-b border-jarvis-border bg-jarvis-surface
                         flex items-center gap-3 flex-shrink-0">
           <button
-            onClick={() => setMobileView('agents')}
+            onClick={() => setMobileView('history')}
             className="text-jarvis-cyan font-mono text-sm px-2 py-1"
           >
-            ← BACK
+            ← CHATS
           </button>
           <div className="flex-1">
             <div className="font-mono font-bold text-jarvis-cyan text-sm">
