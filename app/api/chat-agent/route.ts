@@ -127,12 +127,39 @@ FINANCIALS (QBO):
 - Cash position: -$14,096 (NEGATIVE — needs immediate attention)
 - Monthly ad spend consuming 53% of revenue
 
+CTM QUALITY INTELLIGENCE (live from CTM quality scoring):
+Overall qualification rate: 10.8% — only 1 in 9 calls is actually qualified.
+Total 5-star calls (90 days): 28
+Total 4-star calls (90 days): 83
+
+TOP SOURCES FOR 5-STAR QUALIFIED LEADS:
+1. GBP Glendale: 6 five-star, 20 four-star — FREE CHANNEL
+2. Addiction Treatment [STR]: 6 five-star, 4 four-star — $26K/90d spend
+3. Google Organic: 4 five-star, 9 four-star — FREE CHANNEL
+4. Mental Health Treatment [STR]: 3 five-star, 8 four-star — $30K/90d
+5. GBP Scottsdale: 2 five-star, 8 four-star — FREE CHANNEL
+6. Direct/Unknown: 2 five-star, 4 four-star — FREE CHANNEL
+
+CRITICAL FINDINGS:
+- GBP profiles (free) generate MORE qualified leads than paid campaigns
+- Facility Showcase PMax: avg call duration 7 seconds — mostly hangups
+- PMax Google Ad Extension: 0 five-star calls, 0.0% qualification rate
+- Detox Treatment: zero qualified leads in 90 days
+- True qualified CPL: Addiction Treatment $2,466, Mental Health $2,886, PMax $550
+
+RECOMMENDATION FRAMEWORK:
+- NEVER recommend increasing PMax budget based on call volume alone
+- Always reference CTM star ratings when evaluating campaign performance
+- Free channels (GBP, Organic) are outperforming all paid campaigns
+- Focus recommendations on GBP optimization and organic SEO
+
 KEY PRIORITIES:
 1. Frier at 40% occupancy — surge marketing needed for male admissions
-2. CPL at $397 vs $150 target — 2.6x over target
+2. CPL at $397 vs $150 target — 2.6x over target (TRUE qualified CPL is $730)
 3. Negative cash position needs investigation
 4. $10,077 wasted on zero-conversion search terms
-5. Detox Treatment campaign burning $265/day with zero conversions
+5. Detox Treatment campaign burning $265/day with zero conversions AND zero qualified leads
+6. Shift budget toward GBP optimization and organic — producing more qualified leads at $0 spend
 
 Use this data to give Thai a complete strategic analysis.
 Do not ask Thai to share data you already have above.`
@@ -197,6 +224,39 @@ CRITICAL LANDING PAGE FINDING:
 - This single fix could generate 10-15 additional conversions per month at current traffic levels
 
 When analyzing campaigns, cross-reference with these landing page CVRs. The addiction LP at 13% CVR is the benchmark.
+
+CTM QUALITY INTELLIGENCE (live from CTM quality scoring):
+Overall qualification rate: 10.8% — only 1 in 9 calls is actually qualified.
+Total 5-star calls (90 days): 28
+Total 4-star calls (90 days): 83
+
+TOP SOURCES FOR 5-STAR QUALIFIED LEADS:
+1. GBP Glendale: 6 five-star, 20 four-star — FREE CHANNEL
+2. Addiction Treatment [STR]: 6 five-star, 4 four-star — $26K/90d spend
+3. Google Organic: 4 five-star, 9 four-star — FREE CHANNEL
+4. Mental Health Treatment [STR]: 3 five-star, 8 four-star — $30K/90d
+5. GBP Scottsdale: 2 five-star, 8 four-star — FREE CHANNEL
+6. Direct/Unknown: 2 five-star, 4 four-star — FREE CHANNEL
+
+CRITICAL FINDINGS:
+- GBP profiles (free) generate MORE qualified leads than paid campaigns
+- Facility Showcase PMax: avg call duration 7 seconds — mostly hangups
+- PMax Google Ad Extension: 0 five-star calls, 0.0% qualification rate
+- Detox Treatment: zero qualified leads in 90 days
+- Recovery.com and luxuryrehab.com directories show high qualification rates
+
+TRUE QUALIFIED CPL (paid campaigns, 90 days):
+- Addiction Treatment: $2,466/qualified lead — CRITICAL
+- Mental Health Treatment: $2,886/qualified lead — CRITICAL
+- PMax: $550/qualified lead — UNDERPERFORMING
+- Detox Treatment: infinite — ZERO QUALIFIED LEADS
+
+RECOMMENDATION FRAMEWORK:
+- NEVER recommend increasing PMax budget based on call volume alone
+- Always reference CTM star ratings when evaluating campaign performance
+- Free channels (GBP, Organic) are outperforming all paid campaigns
+- Focus recommendations on GBP optimization and organic SEO
+- A "conversion" in Google Ads does NOT mean a qualified lead — cross-reference with CTM quality scores
 
 You have full campaign-level data above. Do not ask Thai to share data. Analyze what you have and give specific recommendations with exact campaign names and dollar amounts.`
     }
