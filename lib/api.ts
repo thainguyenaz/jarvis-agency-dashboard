@@ -1,6 +1,6 @@
 const PROXY = '/api/proxy';
 
-async function jarvisFetch(path: string, token?: string) {
+export async function jarvisFetch(path: string, token?: string) {
   const res = await fetch(`${PROXY}${path}`, {
     headers: {
       'Content-Type': 'application/json',
