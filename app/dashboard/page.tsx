@@ -53,17 +53,17 @@ export default function OverviewPage() {
         },
         {
           label: 'AD SPEND (30D)',
-          value: adsData ? `$${(adsData.spend / 1000).toFixed(1)}K` : '—',
-          sub: adsData ? `$${Math.round(adsData.spend / 30)}/day avg` : 'No data',
+          value: adsData ? `$${((adsData.summary?.total_spend || 0) / 1000).toFixed(1)}K` : '—',
+          sub: adsData ? `$${Math.round((adsData.summary?.total_spend || 0) / 30)}/day avg` : 'No data',
           status: 'neutral'
         },
         {
           label: 'COST PER LEAD',
-          value: adsData ? `$${Math.round(adsData.cost_per_conversion || 0)}` : '—',
+          value: adsData ? `$${Math.round(adsData.summary?.cost_per_conversion || 0)}` : '—',
           sub: 'Target: <$150',
           status: !adsData ? 'neutral' :
-            (adsData.cost_per_conversion || 0) > 400 ? 'critical' :
-            (adsData.cost_per_conversion || 0) > 200 ? 'warn' : 'good'
+            (adsData.summary?.cost_per_conversion || 0) > 400 ? 'critical' :
+            (adsData.summary?.cost_per_conversion || 0) > 200 ? 'warn' : 'good'
         },
         {
           label: 'CALL ANSWER RATE',
