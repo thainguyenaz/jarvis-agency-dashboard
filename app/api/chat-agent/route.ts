@@ -162,6 +162,21 @@ Account Summary (30 days):
 All ${camps.length} Campaigns:
 ${campLines}
 
+LANDING PAGE ROUTING (confirmed from Google Ads API):
+- Addiction Treatment [STR] → /addiction-mental-health-treatment-facilities-lp/ ✅ CORRECT
+- Mental Health Treatment [STR] → /addiction-mental-health-treatment-facilities-lp/ ✅ CORRECT
+- Brand [STR] → /addiction-mental-health-treatment-facilities-lp/ ✅ CORRECT
+- Detox Treatment [STR] → /drug-alcohol-detox-lp/ 🚨 BROKEN PAGE — zero conversions, $1,763 wasted
+- Facility Showcase PMax → not tracked (PMax manages own URLs)
+
+ROOT CAUSE OF DETOX ZERO CONVERSIONS:
+The /drug-alcohol-detox-lp/ landing page is broken or missing.
+Every detox click lands on a dead page. Fix = redirect to main LP
+or build a dedicated detox LP. Estimated recovery = 10-15 conversions/month.
+
+You now have full visibility into destination URLs.
+Do not ask Thai to pull URL data — you already have it above.
+
 Key findings already identified:
 - Facility Showcase PMax: BEST performer at ~$63 CPL, 9.52% CVR
 - Detox Treatment: $1,061 spent, ZERO conversions in 4 days
