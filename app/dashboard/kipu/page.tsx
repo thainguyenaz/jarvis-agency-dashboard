@@ -103,24 +103,18 @@ export default function CensusPage() {
   // If program field doesn't differentiate, show total outpatient as PHP
   const phpDisplay = phpCount || (iopCount === 0 && opCount === 0 ? outpatientPatients.length : phpCount)
 
-  // Location data from byLocation
-  const byLocation: any[] = census.byLocation || []
-  const church = byLocation.find((l: any) => l.name?.toLowerCase().includes('church'))
-  const frier = byLocation.find((l: any) => l.name?.toLowerCase().includes('frier'))
-  const indianSchool = byLocation.find((l: any) => l.name?.toLowerCase().includes('indian'))
-  const moody = byLocation.find((l: any) => l.name?.toLowerCase().includes('moody'))
-
-  // Use real patient counts (test-filtered) for RTC
-  const churchReal = rtcPatients.filter((p: any) => (p.location || '').toLowerCase().includes('church')).length
-  const frierReal = rtcPatients.filter((p: any) => (p.location || '').toLowerCase().includes('frier')).length
-
-  // Fallback to byLocation census if patients array doesn't have location
-  const churchCount = churchReal || church?.census || 0
-  const frierCount = frierReal || frier?.census || 0
+  // Use confirmed direct fields from API
+  const churchCount = census.church || rtcPatients.filter((p: any) => (p.location || '').toLowerCase().includes('church')).length
+  const frierCount = census.frier || rtcPatients.filter((p: any) => (p.location || '').toLowerCase().includes('frier')).length
 
   const rtcTotal = churchCount + frierCount
   const rtcCapacity = 20
-  const rtcPct = pct(rtcTotal, rtcCapacity)
+  const rtcPct = census.occupancyPct || pct(rtcTotal, rtcCapacity)
+
+  // Location details from locations array
+  const locations: any[] = census.locations || []
+  const indianSchool = locations.find((l: any) => l.name?.toLowerCase().includes('indian'))
+  const moody = locations.find((l: any) => l.name?.toLowerCase().includes('moody'))
   const churchPct = pct(churchCount, RTC_BEDS)
   const frierPct = pct(frierCount, RTC_BEDS)
 
@@ -260,7 +254,7 @@ export default function CensusPage() {
         </div>
         {indianSchool && (
           <div className="text-jarvis-dim text-xs font-mono mt-3 opacity-50">
-            Source: Kipu Indian School location · {indianSchool.census} total outpatient patients
+            Source: Kipu Indian School location · {indianSchool.occupied} total outpatient patients
           </div>
         )}
       </div>
@@ -277,7 +271,7 @@ export default function CensusPage() {
           <div className="border border-jarvis-border rounded-lg p-4 inline-block">
             <div className="text-xs font-mono text-jarvis-dim mb-1">CURRENT RESIDENTS</div>
             <div className="text-4xl font-bold font-mono text-jarvis-cyan">
-              {moody.census}
+              {moody.occupied}
             </div>
           </div>
         </div>
