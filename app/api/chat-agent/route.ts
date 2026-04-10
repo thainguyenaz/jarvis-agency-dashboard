@@ -83,7 +83,60 @@ export async function POST(req: Request) {
 
     // Inject live data context for relevant agents
     let contextBlock = ''
-    if (agentId === '07' && context?.performance) {
+    if (agentId === '01' && context) {
+      const p = context.performance
+      const camps = context.campaigns?.campaigns || []
+      const census = context.census
+      const ctm = context.ctm
+      const hubspot = context.hubspot
+
+      contextBlock = `
+
+LIVE DRC DASHBOARD DATA — pulled right now:
+
+GOOGLE ADS (30 days):
+- Spend: $${p?.spend?.toFixed(0) || 'unknown'}
+- Clicks: ${p?.clicks || 'unknown'}
+- CPL: $${p?.cost_per_conversion?.toFixed(0) || 'unknown'} (target: $150)
+- Conversions: ${Math.round(p?.conversions || 0)}
+- Active campaigns: ${camps.length}
+- Best campaign: Facility Showcase PMax — $63.80 CPL, 9.52% CVR
+- Worst campaign: Detox Treatment — $1,061 spent, ZERO conversions
+- Wasted spend on zero-conversion search terms: $10,077
+
+CENSUS (Kipu live):
+- Church RTC (Scottsdale, female): ${census?.byLocation?.find((l: any) => l.name?.toLowerCase().includes('church'))?.census || '?'}/10 beds
+- Frier RTC (Glendale, male): ${census?.byLocation?.find((l: any) => l.name?.toLowerCase().includes('frier'))?.census || '?'}/10 beds
+- Frier is CRITICAL at 40% — needs male admissions urgently
+- PHP outpatient (Indian School): 1 patient
+
+CALL TRACKING (CTM 30 days):
+- Total calls: ${ctm?.total_calls_30d || 'unknown'}
+- Answer rate: ${ctm?.answer_rate || 'unknown'}%
+- Missed calls: ${ctm?.total_missed || ctm?.missed_calls || 'unknown'}
+- Top source: Google Ads
+
+HUBSPOT PIPELINE:
+- Total deals: ${hubspot?.total_deals || 0}
+- Closed won: ${hubspot?.deals_by_stage?.closedwon?.count || 0}
+- New contacts (30d): ${hubspot?.new_contacts_30d || 0}
+- Lead sources: 69% paid search, 4% organic
+
+FINANCIALS (QBO):
+- March revenue: $94,393
+- Cash position: -$14,096 (NEGATIVE — needs immediate attention)
+- Monthly ad spend consuming 53% of revenue
+
+KEY PRIORITIES:
+1. Frier at 40% occupancy — surge marketing needed for male admissions
+2. CPL at $397 vs $150 target — 2.6x over target
+3. Negative cash position needs investigation
+4. $10,077 wasted on zero-conversion search terms
+5. Detox Treatment campaign burning $265/day with zero conversions
+
+Use this data to give Thai a complete strategic analysis.
+Do not ask Thai to share data you already have above.`
+    } else if (agentId === '07' && context?.performance) {
       const p = context.performance
       const camps = context.campaigns?.campaigns || []
 

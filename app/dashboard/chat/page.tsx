@@ -73,7 +73,29 @@ function AgentChatContent() {
   }, [messages])
 
   useEffect(() => {
-    if (selectedAgent.id === '07') {
+    if (selectedAgent.id === '01') {
+      setContextLoading(true)
+      const t = localStorage.getItem('jarvis_token') || ''
+      Promise.all([
+        fetch('/api/proxy/api/google-ads/performance', {
+          headers: { Authorization: `Bearer ${t}` }
+        }).then(r => r.json()).catch(() => null),
+        fetch('/api/proxy/api/google-ads/campaigns', {
+          headers: { Authorization: `Bearer ${t}` }
+        }).then(r => r.json()).catch(() => null),
+        fetch('/api/proxy/api/kipu/census', {
+          headers: { Authorization: `Bearer ${t}` }
+        }).then(r => r.json()).catch(() => null),
+        fetch('/api/proxy/api/ctm/summary', {
+          headers: { Authorization: `Bearer ${t}` }
+        }).then(r => r.json()).catch(() => null),
+        fetch('/api/proxy/api/hubspot/pipeline', {
+          headers: { Authorization: `Bearer ${t}` }
+        }).then(r => r.json()).catch(() => null),
+      ]).then(([performance, campaigns, census, ctm, hubspot]) => {
+        setLiveContext({ performance, campaigns, census, ctm, hubspot })
+      }).finally(() => setContextLoading(false))
+    } else if (selectedAgent.id === '07') {
       setContextLoading(true)
       const t = localStorage.getItem('jarvis_token') || ''
       Promise.all([
