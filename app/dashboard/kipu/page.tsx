@@ -20,10 +20,9 @@ function OccupancyBar({ value, max }: { value: number; max: number }) {
     <div className="w-full bg-jarvis-bg rounded-full h-3">
       <div
         className={`h-3 rounded-full transition-all ${
-          p === 100 ? 'bg-jarvis-red' :
-          p < 50 ? 'bg-jarvis-red' :
-          p < 70 ? 'bg-jarvis-yellow' :
-          'bg-jarvis-green'
+          p >= 80 ? 'bg-jarvis-green' :
+          p >= 50 ? 'bg-jarvis-yellow' :
+          'bg-jarvis-red'
         }`}
         style={{ width: `${Math.min(p, 100)}%` }}
       />
@@ -32,17 +31,15 @@ function OccupancyBar({ value, max }: { value: number; max: number }) {
 }
 
 function statusColor(p: number): string {
-  if (p === 100) return 'text-jarvis-red'
-  if (p < 50) return 'text-jarvis-red'
-  if (p < 70) return 'text-jarvis-yellow'
-  return 'text-jarvis-green'
+  if (p >= 80) return 'text-jarvis-green'
+  if (p >= 50) return 'text-jarvis-yellow'
+  return 'text-jarvis-red'
 }
 
 function borderColor(p: number): string {
-  if (p >= 100) return 'border-jarvis-red'
-  if (p < 50) return 'border-jarvis-red border-opacity-60'
-  if (p < 70) return 'border-jarvis-yellow'
-  return 'border-jarvis-green'
+  if (p >= 80) return 'border-jarvis-green'
+  if (p >= 50) return 'border-jarvis-yellow'
+  return 'border-jarvis-red border-opacity-60'
 }
 
 export default function CensusPage() {
@@ -150,8 +147,8 @@ export default function CensusPage() {
               {rtcTotal}/{rtcCapacity} beds
             </div>
             {rtcPct === 100 && (
-              <div className="text-jarvis-red text-xs font-mono mt-2 font-bold animate-pulse">
-                🚨 AT CAPACITY
+              <div className="text-jarvis-green text-xs font-mono mt-2 font-bold">
+                FULL CAPACITY
               </div>
             )}
           </div>
@@ -188,8 +185,8 @@ export default function CensusPage() {
               <span>{RTC_BEDS - churchCount} open</span>
             </div>
             {churchPct === 100 && (
-              <div className="text-jarvis-red text-xs font-mono mt-2 font-bold animate-pulse">
-                🚨 AT CAPACITY — SURGE MARKETING ACTIVE
+              <div className="text-jarvis-green text-xs font-mono mt-2 font-bold">
+                FULL CAPACITY
               </div>
             )}
           </div>
