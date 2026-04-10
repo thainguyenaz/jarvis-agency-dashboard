@@ -32,14 +32,14 @@ function OccupancyBar({ value, max }: { value: number; max: number }) {
 
 function statusColor(p: number): string {
   if (p >= 80) return 'text-jarvis-green'
-  if (p >= 50) return 'text-jarvis-yellow'
+  if (p >= 60) return 'text-jarvis-yellow'
   return 'text-jarvis-red'
 }
 
 function borderColor(p: number): string {
   if (p >= 80) return 'border-jarvis-green'
-  if (p >= 50) return 'border-jarvis-yellow'
-  return 'border-jarvis-red border-opacity-60'
+  if (p >= 60) return 'border-jarvis-yellow'
+  return 'border-jarvis-red'
 }
 
 export default function CensusPage() {
@@ -184,9 +184,9 @@ export default function CensusPage() {
               <span>{churchCount}/{RTC_BEDS} beds occupied</span>
               <span>{RTC_BEDS - churchCount} open</span>
             </div>
-            {churchPct === 100 && (
+            {churchPct >= 90 && (
               <div className="text-jarvis-green text-xs font-mono mt-2 font-bold">
-                FULL CAPACITY
+                AT CAPACITY — WAITLIST RECOMMENDED
               </div>
             )}
           </div>
