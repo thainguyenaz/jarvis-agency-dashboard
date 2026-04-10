@@ -106,8 +106,9 @@ export default function GoogleAdsPage() {
     }
   }
 
-  const cpl = performance ?
-    Math.round(performance.cost_per_conversion || 0) : 0
+  const summary = performance?.summary
+  const cpl = summary ?
+    Math.round(summary.cost_per_conversion || 0) : 0
 
   if (loading) return (
     <div className="flex items-center justify-center h-64">
@@ -145,13 +146,13 @@ export default function GoogleAdsPage() {
       {performance && (
         <div className="grid grid-cols-5 gap-3">
           {[
-            { label: 'TOTAL SPEND', value: `$${(performance.spend/1000).toFixed(1)}K`,
+            { label: 'TOTAL SPEND', value: `$${((summary?.total_spend || 0)/1000).toFixed(1)}K`,
               status: 'neutral' },
-            { label: 'CLICKS', value: performance.clicks?.toLocaleString() || '—',
+            { label: 'CLICKS', value: (summary?.total_clicks || 0).toLocaleString(),
               status: 'neutral' },
-            { label: 'CPC', value: `$${performance.cpc?.toFixed(2) || '—'}`,
+            { label: 'CPC', value: `$${(summary?.avg_cpc || 0).toFixed(2)}`,
               status: 'neutral' },
-            { label: 'CONVERSIONS', value: Math.round(performance.conversions || 0).toString(),
+            { label: 'CONVERSIONS', value: Math.round(summary?.total_conversions || 0).toString(),
               status: 'neutral' },
             { label: 'COST PER LEAD', value: `$${cpl}`,
               status: cpl > 400 ? 'critical' : cpl > 200 ? 'warn' : 'good' },
