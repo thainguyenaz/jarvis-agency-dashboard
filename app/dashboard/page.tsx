@@ -35,14 +35,21 @@ export default function OverviewPage() {
       const hubspotData = hubspot.status === 'fulfilled' ? hubspot.value : null
       const agentsData = agentStatus.status === 'fulfilled' ? agentStatus.value : null
 
+      const rtcPatients = (censusData?.byLocation || [])
+        .filter((l: any) =>
+          l.name?.toLowerCase().includes('church') ||
+          l.name?.toLowerCase().includes('frier')
+        )
+        .reduce((sum: number, l: any) => sum + (l.census || 0), 0)
+
       const cards: MetricCard[] = [
         {
           label: 'OVERALL OCCUPANCY',
-          value: censusData ? `${Math.round((censusData.totalCensus / 20) * 100)}%` : '—',
-          sub: censusData ? `${censusData.totalCensus}/20 beds` : 'No data',
+          value: censusData ? `${Math.round((rtcPatients / 20) * 100)}%` : '—',
+          sub: censusData ? `${rtcPatients}/20 beds` : 'No data',
           status: !censusData ? 'neutral' :
-            censusData.totalCensus < 10 ? 'critical' :
-            censusData.totalCensus < 14 ? 'warn' : 'good'
+            rtcPatients < 10 ? 'critical' :
+            rtcPatients < 14 ? 'warn' : 'good'
         },
         {
           label: 'AD SPEND (30D)',
