@@ -24,7 +24,33 @@ export default function GoogleAdsPage() {
         api.getGoogleAdsCampaigns(t),
       ])
       if (perf.status === 'fulfilled') setPerformance(perf.value)
-      if (camps.status === 'fulfilled') setCampaigns(camps.value?.campaigns || [])
+      if (camps.status === 'fulfilled') {
+        const rawCampaigns = camps.value?.campaigns || []
+
+        // Aggregate by campaign name (API returns daily rows)
+        const campaignMap: Record<string, any> = {}
+        rawCampaigns.forEach((c: any) => {
+          const name = c.campaignName || c.name || 'Unknown'
+          if (!campaignMap[name]) {
+            campaignMap[name] = {
+              campaignName: name,
+              status: c.status,
+              spend: 0,
+              clicks: 0,
+              conversions: 0,
+              impressions: 0
+            }
+          }
+          campaignMap[name].spend += c.spend || 0
+          campaignMap[name].clicks += c.clicks || 0
+          campaignMap[name].conversions += c.conversions || 0
+          campaignMap[name].impressions += c.impressions || 0
+        })
+
+        const aggregated = Object.values(campaignMap)
+          .sort((a: any, b: any) => b.spend - a.spend)
+        setCampaigns(aggregated)
+      }
     } finally {
       setLoading(false)
     }
@@ -184,8 +210,9 @@ export default function GoogleAdsPage() {
               </thead>
               <tbody>
                 {campaigns.map((c: any, i: number) => {
-                  const campCpl = c.conversions ?
-                    Math.round((c.spend || 0) / c.conversions) : 0
+                  const campCpl = c.conversions > 0
+                    ? Math.round(c.spend / c.conversions)
+                    : null
                   return (
                     <tr key={i} className="border-b border-jarvis-border border-opacity-30
                                           hover:bg-jarvis-bg transition-colors">
@@ -211,11 +238,12 @@ export default function GoogleAdsPage() {
                         {c.conversions ? Math.round(c.conversions) : '—'}
                       </td>
                       <td className={`py-2 text-right font-bold ${
+                        campCpl === null ? 'text-jarvis-dim' :
                         campCpl > 400 ? 'text-jarvis-red' :
                         campCpl > 200 ? 'text-jarvis-yellow' :
                         'text-jarvis-green'
                       }`}>
-                        ${campCpl || '—'}
+                        {campCpl !== null ? `$${campCpl}` : '—'}
                       </td>
                     </tr>
                   )
