@@ -71,9 +71,12 @@ export async function OPTIONS() {
   return new Response(null, { status: 200, headers: corsHeaders })
 }
 
+const VPS_BASE = 'http://93.188.166.239:3002'
+
 export async function POST(req: Request) {
   try {
-    const { message, agentId, agentRole, agentName, history, context } = await req.json()
+    const authHeader = req.headers.get('authorization') || ''
+    const { message, agentId, agentRole, agentName, history, context, conversation_id } = await req.json()
 
     if (!message) {
       return NextResponse.json({ reply: 'No message provided' }, { status: 400, headers: corsHeaders })
@@ -339,7 +342,37 @@ Thai approval before execution.`
     const data = await response.json()
     const reply = data.content?.[0]?.text || 'No response from agent'
 
-    return NextResponse.json({ reply, agentId, agentName }, { headers: corsHeaders })
+    // Auto-save the exchange to jarvis-api SQLite (non-fatal)
+    let savedConvId = conversation_id || null
+    if (authHeader) {
+      try {
+        const saveRes = await fetch(`${VPS_BASE}/api/conversations/save`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': authHeader,
+          },
+          body: JSON.stringify({
+            conversation_id: conversation_id || undefined,
+            agent_id: agentId,
+            agent_name: agentName,
+            user_message: message,
+            agent_response: reply,
+          })
+        })
+        const saveJson = await saveRes.json()
+        if (saveJson?.conversation_id) savedConvId = saveJson.conversation_id
+      } catch (saveErr: any) {
+        console.error('[CONV] Save failed:', saveErr?.message)
+      }
+    }
+
+    return NextResponse.json({
+      reply,
+      agentId,
+      agentName,
+      conversation_id: savedConvId
+    }, { headers: corsHeaders })
 
   } catch (err: any) {
     console.error('Chat agent error:', err)

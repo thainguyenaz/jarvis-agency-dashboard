@@ -129,13 +129,26 @@ function AgentChatContent() {
 
   async function loadConversations() {
     try {
-      const res = await fetch(`/api/conversations?agentId=${selectedAgent.id}`)
+      const t = localStorage.getItem('jarvis_token') || ''
+      const res = await fetch(
+        `/api/proxy/api/conversations/sessions/${selectedAgent.id}`,
+        { headers: { Authorization: `Bearer ${t}` } }
+      )
       if (!res.ok) {
         setConversations([])
         return
       }
       const data = await res.json()
-      setConversations(data.conversations || [])
+      const transformed: Conversation[] = (data.sessions || []).map((s: any) => ({
+        id: s.conversation_id,
+        agent_id: s.agent_id,
+        agent_name: s.agent_name,
+        title: s.title || 'Conversation',
+        created_at: s.started_at,
+        updated_at: (s.last_message_at || s.started_at) + 'Z',
+        message_count: s.message_count || 0,
+      }))
+      setConversations(transformed)
     } catch {
       setConversations([])
     }
@@ -145,13 +158,31 @@ function AgentChatContent() {
     setLoadingHistory(true)
     setActiveConvId(convId)
     try {
-      const res = await fetch(`/api/conversations/${convId}`)
+      const t = localStorage.getItem('jarvis_token') || ''
+      const res = await fetch(
+        `/api/proxy/api/conversations/${convId}/messages`,
+        { headers: { Authorization: `Bearer ${t}` } }
+      )
       if (!res.ok) {
         setMessages([])
         return
       }
       const data = await res.json()
-      setMessages(data.messages || [])
+      const loaded: Message[] = (data.messages || []).flatMap((m: any, i: number) => [
+        {
+          id: `${m.id}-u`,
+          role: 'user',
+          content: m.user_message,
+          created_at: m.created_at,
+        },
+        {
+          id: `${m.id}-a`,
+          role: 'agent',
+          content: m.agent_response,
+          created_at: m.created_at,
+        },
+      ])
+      setMessages(loaded)
     } catch {
       setMessages([])
     } finally {
@@ -167,12 +198,51 @@ function AgentChatContent() {
 
   async function deleteConversation(convId: string, e: React.MouseEvent) {
     e.stopPropagation()
-    await fetch(`/api/conversations/${convId}`, { method: 'DELETE' })
+    const t = localStorage.getItem('jarvis_token') || ''
+    await fetch(`/api/proxy/api/conversations/${convId}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${t}` },
+    })
     if (activeConvId === convId) {
       setActiveConvId(null)
       setMessages([])
     }
     loadConversations()
+  }
+
+  async function searchConversations(query: string) {
+    if (query.length === 0) {
+      loadConversations()
+      return
+    }
+    if (query.length < 3) return
+    try {
+      const t = localStorage.getItem('jarvis_token') || ''
+      const res = await fetch(
+        `/api/proxy/api/conversations/search?q=${encodeURIComponent(query)}&agent_id=${selectedAgent.id}`,
+        { headers: { Authorization: `Bearer ${t}` } }
+      )
+      if (!res.ok) return
+      const data = await res.json()
+      // Group search results by conversation_id
+      const grouped: Record<string, Conversation> = {}
+      ;(data.results || []).forEach((r: any) => {
+        if (!grouped[r.conversation_id]) {
+          grouped[r.conversation_id] = {
+            id: r.conversation_id,
+            agent_id: r.agent_id,
+            agent_name: r.agent_name,
+            title: r.title || r.user_message?.substring(0, 60) || 'Conversation',
+            created_at: r.created_at,
+            updated_at: r.created_at + 'Z',
+            message_count: 1,
+          }
+        }
+      })
+      setConversations(Object.values(grouped))
+    } catch {
+      // ignore
+    }
   }
 
   async function sendMessage() {
@@ -192,45 +262,32 @@ function AgentChatContent() {
     setLoading(true)
 
     try {
-      // Create conversation if this is first message
-      let convId = activeConvId
-      if (!convId) {
-        const res = await fetch('/api/conversations', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            agentId: selectedAgent.id,
-            agentName: selectedAgent.name,
-            firstMessage: userMsg
-          })
-        })
-        const data = await res.json()
-        convId = data.id
-        setActiveConvId(convId)
-      }
+      const t = localStorage.getItem('jarvis_token') || ''
 
-      // Save user message
-      await fetch(`/api/conversations/${convId}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ role: 'user', content: userMsg })
-      })
-
-      // Get agent response
+      // Get agent response — chat-agent route also auto-saves to jarvis-api
       const res = await fetch('/api/chat-agent', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${t}`,
+        },
         body: JSON.stringify({
           message: userMsg,
           agentId: selectedAgent.id,
           agentRole: selectedAgent.role,
           agentName: selectedAgent.name,
           context: liveContext,
-          history: messages.slice(-10)
+          history: messages.slice(-10),
+          conversation_id: activeConvId,
         })
       })
       const data = await res.json()
       const reply = data.reply || 'No response'
+
+      // Track new conversation_id returned by the server
+      if (data.conversation_id && !activeConvId) {
+        setActiveConvId(data.conversation_id)
+      }
 
       const agentMessage: Message = {
         id: (Date.now() + 1).toString(),
@@ -240,13 +297,6 @@ function AgentChatContent() {
       }
 
       setMessages(prev => [...prev, agentMessage])
-
-      // Save agent response
-      await fetch(`/api/conversations/${convId}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ role: 'agent', content: reply })
-      })
 
       loadConversations()
     } catch {
@@ -481,9 +531,17 @@ function AgentChatContent() {
 
         {/* MIDDLE — Conversation history */}
         <div className="w-56 border-r border-jarvis-border bg-jarvis-bg flex flex-col flex-shrink-0">
-          <div className="p-3 border-b border-jarvis-border flex items-center justify-between">
-            <div className="text-jarvis-dim text-xs font-mono">CONVERSATIONS</div>
-            <button onClick={startNewConversation} className="text-jarvis-cyan text-xs font-mono">+ NEW</button>
+          <div className="p-3 border-b border-jarvis-border">
+            <div className="flex items-center justify-between mb-2">
+              <div className="text-jarvis-dim text-xs font-mono">CONVERSATIONS</div>
+              <button onClick={startNewConversation} className="text-jarvis-cyan text-xs font-mono">+ NEW</button>
+            </div>
+            <input
+              type="text"
+              placeholder="Search..."
+              onChange={(e) => searchConversations(e.target.value)}
+              className="w-full bg-jarvis-bg border border-jarvis-border text-jarvis-text font-mono text-xs px-2 py-1 rounded placeholder-jarvis-dim focus:border-jarvis-cyan focus:outline-none"
+            />
           </div>
           <div className="flex-1 overflow-y-auto">
             {conversations.length === 0 ? (
