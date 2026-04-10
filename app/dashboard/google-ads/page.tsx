@@ -25,31 +25,7 @@ export default function GoogleAdsPage() {
       ])
       if (perf.status === 'fulfilled') setPerformance(perf.value)
       if (camps.status === 'fulfilled') {
-        const rawCampaigns = camps.value?.campaigns || []
-
-        // Aggregate by campaign name (API returns daily rows)
-        const campaignMap: Record<string, any> = {}
-        rawCampaigns.forEach((c: any) => {
-          const key = `${c.campaignId || ''}_${c.campaignName || c.name || 'Unknown'}`
-          if (!campaignMap[key]) {
-            campaignMap[key] = {
-              campaignName: c.campaignName || c.name || 'Unknown',
-              status: c.status,
-              spend: 0,
-              clicks: 0,
-              conversions: 0,
-              impressions: 0
-            }
-          }
-          campaignMap[key].spend += c.spend || 0
-          campaignMap[key].clicks += c.clicks || 0
-          campaignMap[key].conversions += c.conversions || 0
-          campaignMap[key].impressions += c.impressions || 0
-        })
-
-        const aggregated = Object.values(campaignMap)
-          .sort((a: any, b: any) => b.spend - a.spend)
-        setCampaigns(aggregated)
+        setCampaigns(camps.value?.campaigns || [])
       }
     } finally {
       setLoading(false)
@@ -193,31 +169,36 @@ export default function GoogleAdsPage() {
 
       {/* Campaign table */}
       {campaigns.length > 0 && (() => {
-        const totalSpend = campaigns.reduce((s: number, c: any) => s + (c.spend || 0), 0)
+        const totalSpend = campaigns.reduce((s: number, c: any) => s + (c.total?.spend || 0), 0)
         return (
         <div className="bg-jarvis-surface border border-jarvis-border rounded-lg p-4">
           <h2 className="text-jarvis-cyan font-mono font-bold mb-4 tracking-wider">
             CAMPAIGN PERFORMANCE
           </h2>
+          <div className="flex gap-4 text-xs font-mono text-jarvis-dim mb-2">
+            <span>W1 = This week</span>
+            <span>W2 = Last week</span>
+            <span>W3 = 2 weeks ago</span>
+            <span>W4 = 3 weeks ago</span>
+          </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm font-mono">
               <thead>
                 <tr className="text-jarvis-dim border-b border-jarvis-border">
                   <th className="text-left py-2 pr-4">CAMPAIGN</th>
                   <th className="text-right py-2 pr-4">STATUS</th>
-                  <th className="text-right py-2 pr-4">SPEND</th>
-                  <th className="text-right py-2 pr-4">CLICKS</th>
+                  <th className="text-right py-2 pr-4">W1 SPEND</th>
+                  <th className="text-right py-2 pr-4">W2 SPEND</th>
+                  <th className="text-right py-2 pr-4">W3 SPEND</th>
+                  <th className="text-right py-2 pr-4">W4 SPEND</th>
+                  <th className="text-right py-2 pr-4">30D TOTAL</th>
                   <th className="text-right py-2 pr-4">CONV</th>
                   <th className="text-right py-2 pr-4">CPL</th>
                   <th className="text-right py-2">BUDGET%</th>
                 </tr>
               </thead>
               <tbody>
-                {campaigns.map((c: any, i: number) => {
-                  const campCpl = c.conversions > 0
-                    ? Math.round(c.spend / c.conversions)
-                    : null
-                  return (
+                {campaigns.map((c: any, i: number) => (
                     <tr key={i} className="border-b border-jarvis-border border-opacity-30
                                           hover:bg-jarvis-bg transition-colors">
                       <td className="py-2 pr-4 text-jarvis-text max-w-xs truncate">
@@ -232,29 +213,60 @@ export default function GoogleAdsPage() {
                           {c.status === 2 ? 'ENABLED' : 'PAUSED'}
                         </span>
                       </td>
-                      <td className="py-2 pr-4 text-right text-jarvis-text">
-                        ${(c.spend || 0).toFixed(0)}
+                      <td className="py-2 pr-4 text-right text-jarvis-cyan">
+                        ${c.week1?.spend?.toFixed(0) || '—'}
+                      </td>
+                      <td className="py-2 pr-4 text-right text-jarvis-dim">
+                        ${c.week2?.spend?.toFixed(0) || '—'}
+                      </td>
+                      <td className="py-2 pr-4 text-right text-jarvis-dim">
+                        ${c.week3?.spend?.toFixed(0) || '—'}
+                      </td>
+                      <td className="py-2 pr-4 text-right text-jarvis-dim">
+                        ${c.week4?.spend?.toFixed(0) || '—'}
+                      </td>
+                      <td className="py-2 pr-4 text-right font-bold text-jarvis-green">
+                        ${c.total?.spend?.toFixed(0)}
                       </td>
                       <td className="py-2 pr-4 text-right text-jarvis-text">
-                        {c.clicks?.toLocaleString() || '—'}
-                      </td>
-                      <td className="py-2 pr-4 text-right text-jarvis-text">
-                        {c.conversions ? Math.round(c.conversions) : '—'}
+                        {Math.round(c.total?.conversions || 0)}
                       </td>
                       <td className={`py-2 pr-4 text-right font-bold ${
-                        campCpl === null ? 'text-jarvis-dim' :
-                        campCpl > 400 ? 'text-jarvis-red' :
-                        campCpl > 200 ? 'text-jarvis-yellow' :
-                        'text-jarvis-green'
+                        !c.total?.cpl ? 'text-jarvis-dim' :
+                        c.total.cpl < 150 ? 'text-jarvis-green' :
+                        c.total.cpl < 300 ? 'text-jarvis-yellow' :
+                        'text-jarvis-red'
                       }`}>
-                        {campCpl !== null ? `$${campCpl}` : '—'}
+                        {c.total?.cpl ? `$${Math.round(c.total.cpl)}` : '—'}
                       </td>
                       <td className="py-2 text-right text-jarvis-dim">
-                        {totalSpend > 0 ? `${((c.spend / totalSpend) * 100).toFixed(1)}%` : '—'}
+                        {totalSpend > 0 ? `${((c.total.spend / totalSpend) * 100).toFixed(1)}%` : '—'}
                       </td>
                     </tr>
-                  )
-                })}
+                ))}
+                <tr className="border-t border-jarvis-cyan border-opacity-30 font-bold">
+                  <td className="py-2 pr-4 text-jarvis-cyan" colSpan={2}>TOTAL</td>
+                  <td className="py-2 pr-4 text-right text-jarvis-cyan">
+                    ${campaigns.reduce((s: number, c: any) => s + (c.week1?.spend || 0), 0).toFixed(0)}
+                  </td>
+                  <td className="py-2 pr-4 text-right text-jarvis-dim">
+                    ${campaigns.reduce((s: number, c: any) => s + (c.week2?.spend || 0), 0).toFixed(0)}
+                  </td>
+                  <td className="py-2 pr-4 text-right text-jarvis-dim">
+                    ${campaigns.reduce((s: number, c: any) => s + (c.week3?.spend || 0), 0).toFixed(0)}
+                  </td>
+                  <td className="py-2 pr-4 text-right text-jarvis-dim">
+                    ${campaigns.reduce((s: number, c: any) => s + (c.week4?.spend || 0), 0).toFixed(0)}
+                  </td>
+                  <td className="py-2 pr-4 text-right text-jarvis-green">
+                    ${totalSpend.toFixed(0)}
+                  </td>
+                  <td className="py-2 pr-4 text-right text-jarvis-text">
+                    {campaigns.reduce((s: number, c: any) => s + Math.round(c.total?.conversions || 0), 0)}
+                  </td>
+                  <td className="py-2 pr-4 text-right text-jarvis-dim">—</td>
+                  <td className="py-2 text-right text-jarvis-dim">100%</td>
+                </tr>
               </tbody>
             </table>
           </div>
