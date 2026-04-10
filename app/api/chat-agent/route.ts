@@ -174,6 +174,13 @@ KEY LANDING PAGE DATA FROM GA4:
 - CTM inbound calls: 174 (all tracked as conversions)
 - The Detox Treatment campaign zero conversions are likely a landing page mismatch — clicks going to wrong page
 
+CRITICAL LANDING PAGE FINDING:
+- Detox Treatment campaign routes to /drug-alcohol-detox-lp/ which appears to be a broken or non-existent page
+- $1,763 spent on Detox Treatment with ZERO conversions
+- All other campaigns route to /addiction-mental-health-treatment-facilities-lp/ which converts at 13%
+- Fix: Either build /drug-alcohol-detox-lp/ as a dedicated detox landing page OR redirect it to the main addiction LP
+- This single fix could generate 10-15 additional conversions per month at current traffic levels
+
 When analyzing campaigns, cross-reference with these landing page CVRs. The addiction LP at 13% CVR is the benchmark.
 
 You have full campaign-level data above. Do not ask Thai to share data. Analyze what you have and give specific recommendations with exact campaign names and dollar amounts.`
