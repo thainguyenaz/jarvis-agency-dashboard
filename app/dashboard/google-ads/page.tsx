@@ -30,10 +30,10 @@ export default function GoogleAdsPage() {
         // Aggregate by campaign name (API returns daily rows)
         const campaignMap: Record<string, any> = {}
         rawCampaigns.forEach((c: any) => {
-          const name = c.campaignName || c.name || 'Unknown'
-          if (!campaignMap[name]) {
-            campaignMap[name] = {
-              campaignName: name,
+          const key = `${c.campaignId || ''}_${c.campaignName || c.name || 'Unknown'}`
+          if (!campaignMap[key]) {
+            campaignMap[key] = {
+              campaignName: c.campaignName || c.name || 'Unknown',
               status: c.status,
               spend: 0,
               clicks: 0,
@@ -41,10 +41,10 @@ export default function GoogleAdsPage() {
               impressions: 0
             }
           }
-          campaignMap[name].spend += c.spend || 0
-          campaignMap[name].clicks += c.clicks || 0
-          campaignMap[name].conversions += c.conversions || 0
-          campaignMap[name].impressions += c.impressions || 0
+          campaignMap[key].spend += c.spend || 0
+          campaignMap[key].clicks += c.clicks || 0
+          campaignMap[key].conversions += c.conversions || 0
+          campaignMap[key].impressions += c.impressions || 0
         })
 
         const aggregated = Object.values(campaignMap)
@@ -192,7 +192,9 @@ export default function GoogleAdsPage() {
       </div>
 
       {/* Campaign table */}
-      {campaigns.length > 0 && (
+      {campaigns.length > 0 && (() => {
+        const totalSpend = campaigns.reduce((s: number, c: any) => s + (c.spend || 0), 0)
+        return (
         <div className="bg-jarvis-surface border border-jarvis-border rounded-lg p-4">
           <h2 className="text-jarvis-cyan font-mono font-bold mb-4 tracking-wider">
             CAMPAIGN PERFORMANCE
@@ -206,7 +208,8 @@ export default function GoogleAdsPage() {
                   <th className="text-right py-2 pr-4">SPEND</th>
                   <th className="text-right py-2 pr-4">CLICKS</th>
                   <th className="text-right py-2 pr-4">CONV</th>
-                  <th className="text-right py-2">CPL</th>
+                  <th className="text-right py-2 pr-4">CPL</th>
+                  <th className="text-right py-2">BUDGET%</th>
                 </tr>
               </thead>
               <tbody>
@@ -238,13 +241,16 @@ export default function GoogleAdsPage() {
                       <td className="py-2 pr-4 text-right text-jarvis-text">
                         {c.conversions ? Math.round(c.conversions) : '—'}
                       </td>
-                      <td className={`py-2 text-right font-bold ${
+                      <td className={`py-2 pr-4 text-right font-bold ${
                         campCpl === null ? 'text-jarvis-dim' :
                         campCpl > 400 ? 'text-jarvis-red' :
                         campCpl > 200 ? 'text-jarvis-yellow' :
                         'text-jarvis-green'
                       }`}>
                         {campCpl !== null ? `$${campCpl}` : '—'}
+                      </td>
+                      <td className="py-2 text-right text-jarvis-dim">
+                        {totalSpend > 0 ? `${((c.spend / totalSpend) * 100).toFixed(1)}%` : '—'}
                       </td>
                     </tr>
                   )
@@ -253,7 +259,8 @@ export default function GoogleAdsPage() {
             </table>
           </div>
         </div>
-      )}
+        )
+      })()}
 
       {/* Agent Chat */}
       <div className="bg-jarvis-surface border border-jarvis-border rounded-lg p-4">
