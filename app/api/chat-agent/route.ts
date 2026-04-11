@@ -22,10 +22,9 @@ optimization, and topical authority content.
 Phase 1: Advise only. No execution without Thai approval.`,
 
   '07': `You are Agent 07, the Google Paid Media Buyer for Desert Recovery Centers (DRC).
-Current account data: $49,553 spend (30d), 4,400 clicks, $11.26 CPC, 123 conversions,
-$402.89 CPL. Target CPL is under $150. You have 20 active campaigns.
-Top performer: Facility Showcase PMax at $63.80 CPL, 9.52% CVR.
-Worst performer: Detox Treatment at $1,061 spend, zero conversions in 4 days.
+Your job is to analyze live Google Ads account performance and advise Thai on
+campaign optimization, budget allocation, bid strategy, and landing-page routing.
+Target CPL is under $150.
 Guardrails: max 2 changes per campaign per week, max 20% bid adjustment,
 budget increases over 30% require Thai approval, no changes during learning phase.
 Phase 1: Advise only. No execution without Thai approval.`,
@@ -93,79 +92,44 @@ export async function POST(req: Request) {
       const ctm = context.ctm
       const hubspot = context.hubspot
 
+      const churchCensus = census?.byLocation?.find((l: any) => l.name?.toLowerCase().includes('church'))?.census
+      const frierCensus  = census?.byLocation?.find((l: any) => l.name?.toLowerCase().includes('frier'))?.census
+
       contextBlock = `
 
 LIVE DRC DASHBOARD DATA — pulled right now:
 
 GOOGLE ADS (30 days):
-- Spend: $${p?.summary?.total_spend?.toFixed(0) || 'unknown'}
-- Clicks: ${p?.summary?.total_clicks || 'unknown'}
-- CPL: $${p?.summary?.cost_per_conversion?.toFixed(0) || 'unknown'} (target: $150)
+- Spend: $${p?.summary?.total_spend?.toFixed(0) ?? 'unknown'}
+- Clicks: ${p?.summary?.total_clicks ?? 'unknown'}
+- CPL: $${p?.summary?.cost_per_conversion?.toFixed(0) ?? 'unknown'} (target: $150)
 - Conversions: ${Math.round(p?.summary?.total_conversions || 0)}
 - Active campaigns: ${camps.length}
-- Best campaign: Facility Showcase PMax — $63.80 CPL, 9.52% CVR
-- Worst campaign: Detox Treatment — $1,061 spent, ZERO conversions
-- Wasted spend on zero-conversion search terms: $10,077
 
 CENSUS (Kipu live):
-- Church RTC (Scottsdale, female): ${census?.byLocation?.find((l: any) => l.name?.toLowerCase().includes('church'))?.census || '?'}/10 beds
-- Frier RTC (Glendale, male): ${census?.byLocation?.find((l: any) => l.name?.toLowerCase().includes('frier'))?.census || '?'}/10 beds
-- Frier is CRITICAL at 40% — needs male admissions urgently
-- PHP outpatient (Indian School): 1 patient
+- Church RTC (Scottsdale, female): ${churchCensus ?? '?'} beds occupied
+- Frier RTC (Glendale, male): ${frierCensus ?? '?'} beds occupied
 
 CALL TRACKING (CTM 30 days):
-- Total calls: ${ctm?.total_calls_30d || 'unknown'}
-- Answer rate: ${ctm?.answer_rate || 'unknown'}%
-- Missed calls: ${ctm?.total_missed || ctm?.missed_calls || 'unknown'}
-- Top source: Google Ads
+- Total calls: ${ctm?.total_calls_30d ?? 'unknown'}
+- Answer rate: ${ctm?.answer_rate ?? 'unknown'}%
+- Missed calls: ${ctm?.total_missed ?? ctm?.missed_calls ?? 'unknown'}
 
 HUBSPOT PIPELINE:
-- Total deals: ${hubspot?.deals_count || 0}
-- Closed won: ${(hubspot?.recent_deals || []).filter((d: any) => d.stage === 'closedwon').length}
-- New contacts (30d): ${hubspot?.new_contacts_30d ?? 'N/A'}
-- Lead sources: 69% paid search, 4% organic
-
-FINANCIALS (QBO):
-- March revenue: $94,393
-- Cash position: -$14,096 (NEGATIVE — needs immediate attention)
-- Monthly ad spend consuming 53% of revenue
-
-CTM QUALITY INTELLIGENCE (live from CTM quality scoring):
-Overall qualification rate: 10.8% — only 1 in 9 calls is actually qualified.
-Total 5-star calls (90 days): 28
-Total 4-star calls (90 days): 83
-
-TOP SOURCES FOR 5-STAR QUALIFIED LEADS:
-1. GBP Glendale: 6 five-star, 20 four-star — FREE CHANNEL
-2. Addiction Treatment [STR]: 6 five-star, 4 four-star — $26K/90d spend
-3. Google Organic: 4 five-star, 9 four-star — FREE CHANNEL
-4. Mental Health Treatment [STR]: 3 five-star, 8 four-star — $30K/90d
-5. GBP Scottsdale: 2 five-star, 8 four-star — FREE CHANNEL
-6. Direct/Unknown: 2 five-star, 4 four-star — FREE CHANNEL
-
-CRITICAL FINDINGS:
-- GBP profiles (free) generate MORE qualified leads than paid campaigns
-- Facility Showcase PMax: avg call duration 7 seconds — mostly hangups
-- PMax Google Ad Extension: 0 five-star calls, 0.0% qualification rate
-- Detox Treatment: zero qualified leads in 90 days
-- True qualified CPL: Addiction Treatment $2,466, Mental Health $2,886, PMax $550
+- Total deals: ${hubspot?.deals_count ?? 0}
+- Closed won (recent sample): ${(hubspot?.recent_deals || []).filter((d: any) => d.stage === 'closedwon').length}
+- Total contacts: ${hubspot?.contacts_count ?? 'unknown'}
 
 RECOMMENDATION FRAMEWORK:
-- NEVER recommend increasing PMax budget based on call volume alone
-- Always reference CTM star ratings when evaluating campaign performance
-- Free channels (GBP, Organic) are outperforming all paid campaigns
-- Focus recommendations on GBP optimization and organic SEO
+- NEVER recommend increasing PMax budget based on call volume alone — cross-reference with CTM star ratings
+- A "conversion" in Google Ads does NOT mean a qualified lead. Use CTM quality scores as the truth metric
+- Free channels (GBP, Organic) should be evaluated on qualified-lead output, not just call volume
+- When occupancy is low at a specific location, flag surge-marketing needs for that demographic
+- When account CPL exceeds the $150 target, diagnose root cause before recommending budget changes
 
-KEY PRIORITIES:
-1. Frier at 40% occupancy — surge marketing needed for male admissions
-2. CPL at $397 vs $150 target — 2.6x over target (TRUE qualified CPL is $730)
-3. Negative cash position needs investigation
-4. $10,077 wasted on zero-conversion search terms
-5. Detox Treatment campaign burning $265/day with zero conversions AND zero qualified leads
-6. Shift budget toward GBP optimization and organic — producing more qualified leads at $0 spend
-
-Use this data to give Thai a complete strategic analysis.
-Do not ask Thai to share data you already have above.`
+Analyze the live numbers above to give Thai a complete strategic picture.
+Do not ask Thai to share data you already have above. Cite actual numbers from
+this context in your response.`
     } else if (agentId === '07' && context?.performance) {
       // Detect requested time range from the user message. Default is 7d
       // (daily check-in bias — most Agent 07 questions are "how are we doing
@@ -225,56 +189,20 @@ Account Summary (${rangeLabel}):
 - Clicks: ${p.summary?.total_clicks}
 - CPC: $${p.summary?.avg_cpc?.toFixed(2)}
 - Conversions: ${Math.round(p.summary?.total_conversions || 0)}
-- CPL: $${p.summary?.cost_per_conversion?.toFixed(2)}
+- CPL: $${p.summary?.cost_per_conversion?.toFixed(2)} (target: $150)
 - CTR: ${p.summary?.avg_ctr?.toFixed(2)}%
 
-All ${camps.length} Campaigns:
+All ${camps.length} Campaigns (Status: ENABLED means serving, PAUSED means not serving):
 ${campLines}
 
-LANDING PAGE ROUTING (confirmed from Google Ads API):
-- Addiction Treatment [STR] → /addiction-mental-health-treatment-facilities-lp/ ✅ CORRECT
-- Mental Health Treatment [STR] → /addiction-mental-health-treatment-facilities-lp/ ✅ CORRECT
-- Brand [STR] → /addiction-mental-health-treatment-facilities-lp/ ✅ CORRECT
-- Detox Treatment [STR] → /drug-alcohol-detox-lp/ 🚨 BROKEN PAGE — zero conversions, $1,763 wasted
-- Facility Showcase PMax → not tracked (PMax manages own URLs)
-
-ROOT CAUSE OF DETOX ZERO CONVERSIONS:
-The /drug-alcohol-detox-lp/ landing page is broken or missing.
-Every detox click lands on a dead page. Fix = redirect to main LP
-or build a dedicated detox LP. Estimated recovery = 10-15 conversions/month.
-
-You now have full visibility into destination URLs.
-Do not ask Thai to pull URL data — you already have it above.
-
-Key findings already identified:
-- Facility Showcase PMax: BEST performer at ~$63 CPL, 9.52% CVR
-- Detox Treatment: $1,061 spent, ZERO conversions in 4 days
-- Overall CVR at 2.9% vs 5-10% industry benchmark
-
-KEY LANDING PAGE DATA FROM GA4:
-- Best converting page: /addiction-mental-health-treatment-facilities-lp — 176 conversions, 13.01% CVR, 1,353 sessions — this is likely a dedicated Google Ads LP
-- Homepage: 23 conversions, 16.91% CVR
-- Form completion rate: 66% (247 starts, 163 submits)
-- CTM inbound calls: 174 (all tracked as conversions)
-- The Detox Treatment campaign zero conversions are likely a landing page mismatch — clicks going to wrong page
-
-CRITICAL LANDING PAGE FINDING:
-- Detox Treatment campaign routes to /drug-alcohol-detox-lp/ which appears to be a broken or non-existent page
-- $1,763 spent on Detox Treatment with ZERO conversions
-- All other campaigns route to /addiction-mental-health-treatment-facilities-lp/ which converts at 13%
-- Fix: Either build /drug-alcohol-detox-lp/ as a dedicated detox landing page OR redirect it to the main addiction LP
-- This single fix could generate 10-15 additional conversions per month at current traffic levels
-
-When analyzing campaigns, cross-reference with these landing page CVRs. The addiction LP at 13% CVR is the benchmark.
-
 RECOMMENDATION FRAMEWORK:
-- NEVER recommend increasing PMax budget based on call volume alone
-- Always reference CTM star ratings when evaluating campaign performance
-- Free channels (GBP, Organic) are outperforming all paid campaigns
-- Focus recommendations on GBP optimization and organic SEO
-- A "conversion" in Google Ads does NOT mean a qualified lead — cross-reference with CTM quality scores
+- A "conversion" in Google Ads does NOT mean a qualified lead — always cross-reference with CTM quality scores below before drawing conclusions
+- NEVER recommend increasing PMax budget based on call volume alone; PMax historically produces low-duration hangup calls that inflate conversion counts without driving qualified leads
+- When a campaign shows zero or very low conversions at meaningful spend, diagnose root cause by looking at: ad copy intent, match types, landing-page destination and form functionality, Quality Score, and CTM call quality for that source — do NOT assume a broken landing page without verifying the URL loads and has a working form
+- When recommending pauses, budget shifts, or bid changes, cite the exact campaign name and the specific metric threshold that justifies the action
+- Free channels (GBP, Organic) should be evaluated on qualified-lead output, not just call volume
 
-You have full campaign-level data above. Do not ask Thai to share data. Analyze what you have and give specific recommendations with exact campaign names and dollar amounts.`
+You have full campaign-level data above plus CTM quality data injected below. Do not ask Thai to share data you already have. Analyze what you have and give specific recommendations with exact campaign names and dollar amounts from this live context.`
 
       // Live CTM quality data injection
       const cq = context.campaignQuality
@@ -307,9 +235,7 @@ You have full campaign-level data above. Do not ask Thai to share data. Analyze 
         }
       }
 
-      contextBlock += `\nKEY INSIGHT: True qualified CPL is 2-3x higher than Google-reported CPL because most Google conversions are low-quality calls. Always reference CTM star ratings, not Google conversion counts.\n`
-      contextBlock += `PMax avg call duration: 7 seconds = hangups, not leads.\n`
-      contextBlock += `Detox Treatment: PAUSED as of April 10, 2026.\n`
+      contextBlock += `\nKEY INSIGHT: True qualified CPL is typically much higher than Google-reported CPL because many Google conversions are low-quality calls. Always reference CTM star ratings from the live data above, not Google conversion counts, when evaluating campaign performance.\n`
     }
 
     const systemPrompt = `${persona}${contextBlock}
