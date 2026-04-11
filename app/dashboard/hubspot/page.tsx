@@ -29,8 +29,12 @@ export default function HubSpotPage() {
     </div>
   )
 
-  const stages = pipeline.deals_by_stage || {}
-  const newContacts = contacts?.new_contacts_30d || pipeline.new_contacts_30d || 0
+  const recentDeals = pipeline.recent_deals || []
+  const stages: Record<string, { count: number }> = {}
+  for (const d of recentDeals) {
+    const key = d.stage || 'unknown'
+    stages[key] = { count: (stages[key]?.count || 0) + 1 }
+  }
   const leadSources = Object.entries(contacts?.lead_sources || pipeline.lead_sources || {})
     .map(([source, count]) => ({ source, count: count as number }))
     .sort((a, b) => b.count - a.count)
@@ -42,9 +46,9 @@ export default function HubSpotPage() {
 
       <div className="grid grid-cols-3 gap-4">
         {[
-          { label: 'TOTAL DEALS', value: pipeline.total_deals || 0, status: 'neutral' },
+          { label: 'TOTAL DEALS', value: pipeline.deals_count || 0, status: 'neutral' },
           { label: 'CLOSED WON', value: stages.closedwon?.count || 0, status: 'good' },
-          { label: 'NEW CONTACTS (30D)', value: newContacts, status: 'neutral' },
+          { label: 'TOTAL CONTACTS', value: pipeline.contacts_count || 0, status: 'neutral' },
         ].map((m, i) => (
           <div key={i} className={`bg-jarvis-surface border rounded-lg p-4 ${
             m.status === 'good' ? 'border-jarvis-green' : 'border-jarvis-border'
@@ -96,7 +100,7 @@ export default function HubSpotPage() {
         </div>
       )}
 
-      {(pipeline.total_pipeline_value || 0) === 0 && (
+      {(pipeline.pipeline_value || 0) === 0 && (
         <div className="bg-jarvis-surface border border-jarvis-yellow border-opacity-30 rounded-lg p-4">
           <div className="text-jarvis-yellow font-mono text-xs font-bold mb-2">⚠️ DATA QUALITY ALERT</div>
           <div className="text-jarvis-dim text-xs font-mono">

@@ -167,17 +167,20 @@ KEY PRIORITIES:
 Use this data to give Thai a complete strategic analysis.
 Do not ask Thai to share data you already have above.`
     } else if (agentId === '07' && context?.performance) {
-      // Detect requested time range from the user message. Defaults to the
-      // 30d context the client already fetched; if the user asks about "this
-      // week / today / recent" we re-fetch 7d, and 90d for "quarter" etc.
+      // Detect requested time range from the user message. Default is 7d
+      // (daily check-in bias — most Agent 07 questions are "how are we doing
+      // today / this week"). If the user explicitly asks about "this month",
+      // "30 days", "quarter", etc. we widen the window.
       const msgLower = (message || '').toLowerCase()
-      let requestedDays = 30
-      if (/\btoday\b|\bthis week\b|\brecent(ly)?\b|\blast 7\b|\b7 days?\b|\bpast week\b/.test(msgLower)) {
-        requestedDays = 7
-      } else if (/\b90 days?\b|\bquarter\b|\blast 3 months?\b|\bpast 90\b/.test(msgLower)) {
+      let requestedDays = 7
+      if (/\b90 days?\b|\bquarter\b|\blast 3 months?\b|\bpast 90\b/.test(msgLower)) {
         requestedDays = 90
+      } else if (/\bthis month\b|\b30 days?\b|\blast 30\b|\bpast 30\b|\bmonth\b/.test(msgLower)) {
+        requestedDays = 30
       } else if (/\blast 14\b|\b14 days?\b|\btwo weeks?\b|\bpast 14\b/.test(msgLower)) {
         requestedDays = 14
+      } else if (/\btoday\b|\byesterday\b|\bthis week\b|\bweek\b|\brecent(ly)?\b|\blast 7\b|\b7 days?\b|\bpast week\b/.test(msgLower)) {
+        requestedDays = 7
       }
 
       let p: any = context.performance
