@@ -40,7 +40,8 @@ export default function QualifiedLeadsPage() {
   const [activeTab, setActiveTab] = useState<'sources'|'trend'|'calls'>('sources')
 
   useEffect(() => {
-    jarvisFetch('/api/ctm/qualified-history?months=12')
+    const t = localStorage.getItem('jarvis_token') || ''
+    jarvisFetch('/api/ctm/qualified-history?months=12', t)
       .then(setData)
       .catch(console.error)
       .finally(() => setLoading(false))

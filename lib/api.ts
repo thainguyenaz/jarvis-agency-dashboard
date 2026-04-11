@@ -1,10 +1,13 @@
 const PROXY = '/api/proxy';
 
 export async function jarvisFetch(path: string, token?: string) {
+  const authToken =
+    token ||
+    (typeof window !== 'undefined' ? localStorage.getItem('jarvis_token') || '' : '');
   const res = await fetch(`${PROXY}${path}`, {
     headers: {
       'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {})
+      ...(authToken ? { Authorization: `Bearer ${authToken}` } : {})
     },
   });
   if (res.status === 401) {

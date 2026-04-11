@@ -98,10 +98,10 @@ export async function POST(req: Request) {
 LIVE DRC DASHBOARD DATA — pulled right now:
 
 GOOGLE ADS (30 days):
-- Spend: $${p?.spend?.toFixed(0) || 'unknown'}
-- Clicks: ${p?.clicks || 'unknown'}
-- CPL: $${p?.cost_per_conversion?.toFixed(0) || 'unknown'} (target: $150)
-- Conversions: ${Math.round(p?.conversions || 0)}
+- Spend: $${p?.summary?.total_spend?.toFixed(0) || 'unknown'}
+- Clicks: ${p?.summary?.total_clicks || 'unknown'}
+- CPL: $${p?.summary?.cost_per_conversion?.toFixed(0) || 'unknown'} (target: $150)
+- Conversions: ${Math.round(p?.summary?.total_conversions || 0)}
 - Active campaigns: ${camps.length}
 - Best campaign: Facility Showcase PMax — $63.80 CPL, 9.52% CVR
 - Worst campaign: Detox Treatment — $1,061 spent, ZERO conversions
@@ -120,9 +120,9 @@ CALL TRACKING (CTM 30 days):
 - Top source: Google Ads
 
 HUBSPOT PIPELINE:
-- Total deals: ${hubspot?.total_deals || 0}
-- Closed won: ${hubspot?.deals_by_stage?.closedwon?.count || 0}
-- New contacts (30d): ${hubspot?.new_contacts_30d || 0}
+- Total deals: ${hubspot?.deals_count || 0}
+- Closed won: ${(hubspot?.recent_deals || []).filter((d: any) => d.stage === 'closedwon').length}
+- New contacts (30d): ${hubspot?.new_contacts_30d ?? 'N/A'}
 - Lead sources: 69% paid search, 4% organic
 
 FINANCIALS (QBO):
@@ -182,12 +182,12 @@ Do not ask Thai to share data you already have above.`
 LIVE GOOGLE ADS DATA — pulled directly from your account right now:
 
 Account Summary (30 days):
-- Total Spend: $${p.spend?.toFixed(2)}
-- Clicks: ${p.clicks}
-- CPC: $${p.cpc?.toFixed(2)}
-- Conversions: ${Math.round(p.conversions || 0)}
-- CPL: $${p.cost_per_conversion?.toFixed(2)}
-- CTR: ${p.ctr?.toFixed(2)}%
+- Total Spend: $${p.summary?.total_spend?.toFixed(2)}
+- Clicks: ${p.summary?.total_clicks}
+- CPC: $${p.summary?.avg_cpc?.toFixed(2)}
+- Conversions: ${Math.round(p.summary?.total_conversions || 0)}
+- CPL: $${p.summary?.cost_per_conversion?.toFixed(2)}
+- CTR: ${p.summary?.avg_ctr?.toFixed(2)}%
 
 All ${camps.length} Campaigns:
 ${campLines}

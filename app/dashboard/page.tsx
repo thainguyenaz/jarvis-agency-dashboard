@@ -71,8 +71,10 @@ export default function OverviewPage() {
         },
         {
           label: 'OPEN DEALS',
-          value: hubspotData ? `${hubspotData.total_deals || 0}` : '—',
-          sub: hubspotData ? `${hubspotData.deals_by_stage?.closedwon?.count || 0} closed won` : 'No data',
+          value: hubspotData ? `${hubspotData.deals_count || 0}` : '—',
+          sub: hubspotData
+            ? `${(hubspotData.recent_deals || []).filter((d: any) => d.stage === 'closedwon').length} closed won`
+            : 'No data',
           status: 'neutral'
         },
         {
