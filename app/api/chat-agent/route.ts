@@ -167,8 +167,44 @@ KEY PRIORITIES:
 Use this data to give Thai a complete strategic analysis.
 Do not ask Thai to share data you already have above.`
     } else if (agentId === '07' && context?.performance) {
-      const p = context.performance
-      const camps = context.campaigns?.campaigns || []
+      // Detect requested time range from the user message. Defaults to the
+      // 30d context the client already fetched; if the user asks about "this
+      // week / today / recent" we re-fetch 7d, and 90d for "quarter" etc.
+      const msgLower = (message || '').toLowerCase()
+      let requestedDays = 30
+      if (/\btoday\b|\bthis week\b|\brecent(ly)?\b|\blast 7\b|\b7 days?\b|\bpast week\b/.test(msgLower)) {
+        requestedDays = 7
+      } else if (/\b90 days?\b|\bquarter\b|\blast 3 months?\b|\bpast 90\b/.test(msgLower)) {
+        requestedDays = 90
+      } else if (/\blast 14\b|\b14 days?\b|\btwo weeks?\b|\bpast 14\b/.test(msgLower)) {
+        requestedDays = 14
+      }
+
+      let p: any = context.performance
+      let camps: any[] = context.campaigns?.campaigns || []
+
+      // Re-fetch if the user asked for a range different from the client's 30d default.
+      if (requestedDays !== 30 && authHeader) {
+        try {
+          const [perfRes, campRes] = await Promise.all([
+            fetch(`${VPS_BASE}/api/google-ads/performance?days=${requestedDays}`, {
+              headers: { Authorization: authHeader }
+            }),
+            fetch(`${VPS_BASE}/api/google-ads/campaigns?days=${requestedDays}`, {
+              headers: { Authorization: authHeader }
+            }),
+          ])
+          if (perfRes.ok) p = await perfRes.json()
+          if (campRes.ok) {
+            const cj = await campRes.json()
+            camps = cj?.campaigns || camps
+          }
+        } catch (err: any) {
+          console.error('[chat-agent] days re-fetch failed:', err?.message)
+        }
+      }
+
+      const rangeLabel = `${requestedDays} day${requestedDays === 1 ? '' : 's'}`
 
       const campLines = camps.slice(0, 20).map((c: any) => {
         const cpl = c.conversions > 0
@@ -181,7 +217,7 @@ Do not ask Thai to share data you already have above.`
 
 LIVE GOOGLE ADS DATA — pulled directly from your account right now:
 
-Account Summary (30 days):
+Account Summary (${rangeLabel}):
 - Total Spend: $${p.summary?.total_spend?.toFixed(2)}
 - Clicks: ${p.summary?.total_clicks}
 - CPC: $${p.summary?.avg_cpc?.toFixed(2)}
