@@ -267,32 +267,6 @@ CRITICAL LANDING PAGE FINDING:
 
 When analyzing campaigns, cross-reference with these landing page CVRs. The addiction LP at 13% CVR is the benchmark.
 
-CTM QUALITY INTELLIGENCE (live from CTM quality scoring):
-Overall qualification rate: 10.8% — only 1 in 9 calls is actually qualified.
-Total 5-star calls (90 days): 28
-Total 4-star calls (90 days): 83
-
-TOP SOURCES FOR 5-STAR QUALIFIED LEADS:
-1. GBP Glendale: 6 five-star, 20 four-star — FREE CHANNEL
-2. Addiction Treatment [STR]: 6 five-star, 4 four-star — $26K/90d spend
-3. Google Organic: 4 five-star, 9 four-star — FREE CHANNEL
-4. Mental Health Treatment [STR]: 3 five-star, 8 four-star — $30K/90d
-5. GBP Scottsdale: 2 five-star, 8 four-star — FREE CHANNEL
-6. Direct/Unknown: 2 five-star, 4 four-star — FREE CHANNEL
-
-CRITICAL FINDINGS:
-- GBP profiles (free) generate MORE qualified leads than paid campaigns
-- Facility Showcase PMax: avg call duration 7 seconds — mostly hangups
-- PMax Google Ad Extension: 0 five-star calls, 0.0% qualification rate
-- Detox Treatment: zero qualified leads in 90 days
-- Recovery.com and luxuryrehab.com directories show high qualification rates
-
-TRUE QUALIFIED CPL (paid campaigns, 90 days):
-- Addiction Treatment: $2,466/qualified lead — CRITICAL
-- Mental Health Treatment: $2,886/qualified lead — CRITICAL
-- PMax: $550/qualified lead — UNDERPERFORMING
-- Detox Treatment: infinite — ZERO QUALIFIED LEADS
-
 RECOMMENDATION FRAMEWORK:
 - NEVER recommend increasing PMax budget based on call volume alone
 - Always reference CTM star ratings when evaluating campaign performance
@@ -321,14 +295,14 @@ You have full campaign-level data above. Do not ask Thai to share data. Analyze 
       if (ctmQ?.summary) {
         contextBlock += `\nCTM QUALITY SUMMARY (30 days):\n`
         contextBlock += `Total calls: ${ctmQ.summary.total_calls}\n`
-        contextBlock += `5-star qualified: ${ctmQ.summary.five_star_count}\n`
-        contextBlock += `4-star potential: ${ctmQ.summary.four_star_count}\n`
-        contextBlock += `Overall qual rate: ${ctmQ.summary.overall_qualification_rate}%\n`
+        contextBlock += `5-star qualified: ${ctmQ.summary.score_distribution?.['5'] ?? 0}\n`
+        contextBlock += `4-star potential: ${ctmQ.summary.score_distribution?.['4'] ?? 0}\n`
+        contextBlock += `Overall qual rate: ${ctmQ.summary.qualification_rate}%\n`
 
         if (ctmQ.by_source) {
           contextBlock += `\nQUALIFIED LEADS BY SOURCE:\n`
           ctmQ.by_source.slice(0, 8).forEach((s: any) => {
-            contextBlock += `- ${s.source}: ${s.qualified} qualified (${s.five_star} five-star), ${s.qualification_rate}% qual rate\n`
+            contextBlock += `- ${s.source}: ${s.qualified} qualified (${s.scores?.['5'] ?? 0} five-star), ${s.qualificationRate}% qual rate\n`
           })
         }
       }
