@@ -235,6 +235,13 @@ You have full campaign-level data above plus CTM quality data injected below. Do
         }
       }
 
+      if (context.campaignHistory?.campaigns) {
+        contextBlock += `\nCAMPAIGN ALL-TIME HISTORY:\n`
+        context.campaignHistory.campaigns.forEach((c: any) => {
+          contextBlock += `- ${c.campaign_name}: $${c.total_spend.toFixed(0)} total spend, active ${c.first_active || '?'} to ${c.last_active || '?'}, ${Math.round(c.total_conversions)} conv, avg CPA ${c.avg_cpa ? '$' + c.avg_cpa : 'N/A'}, status: ${c.status}\n`
+        })
+      }
+
       contextBlock += `\nKEY INSIGHT: True qualified CPL is typically much higher than Google-reported CPL because many Google conversions are low-quality calls. Always reference CTM star ratings from the live data above, not Google conversion counts, when evaluating campaign performance.\n`
     }
 

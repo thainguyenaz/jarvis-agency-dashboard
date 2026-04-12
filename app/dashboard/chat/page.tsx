@@ -111,8 +111,11 @@ function AgentChatContent() {
         fetch('/api/proxy/api/ctm/campaign-quality?days=30', {
           headers: { Authorization: `Bearer ${t}` }
         }).then(r => r.json()).catch(() => null),
-      ]).then(([performance, campaigns, ctmQuality, campaignQuality]) => {
-        setLiveContext({ performance, campaigns, ctmQuality, campaignQuality })
+        fetch('/api/proxy/api/google-ads/campaign-history', {
+          headers: { Authorization: `Bearer ${t}` }
+        }).then(r => r.json()).catch(() => null),
+      ]).then(([performance, campaigns, ctmQuality, campaignQuality, campaignHistory]) => {
+        setLiveContext({ performance, campaigns, ctmQuality, campaignQuality, campaignHistory })
       }).finally(() => setContextLoading(false))
     } else if (selectedAgent.id === '03' || selectedAgent.id === '18') {
       setContextLoading(true)
