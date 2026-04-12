@@ -92,8 +92,11 @@ function AgentChatContent() {
         fetch('/api/proxy/api/hubspot/pipeline', {
           headers: { Authorization: `Bearer ${t}` }
         }).then(r => r.json()).catch(() => null),
-      ]).then(([performance, campaigns, census, ctm, hubspot]) => {
-        setLiveContext({ performance, campaigns, census, ctm, hubspot })
+        fetch('/api/proxy/api/google-ads/campaign-history', {
+          headers: { Authorization: `Bearer ${t}` }
+        }).then(r => r.json()).catch(() => null),
+      ]).then(([performance, campaigns, census, ctm, hubspot, campaignHistory]) => {
+        setLiveContext({ performance, campaigns, census, ctm, hubspot, campaignHistory })
       }).finally(() => setContextLoading(false))
     } else if (selectedAgent.id === '07') {
       setContextLoading(true)

@@ -95,6 +95,13 @@ export async function POST(req: Request) {
       const churchCensus = census?.byLocation?.find((l: any) => l.name?.toLowerCase().includes('church'))?.census
       const frierCensus  = census?.byLocation?.find((l: any) => l.name?.toLowerCase().includes('frier'))?.census
 
+      const campLines = camps.slice(0, 20).map((c: any) => {
+        const cpl = c.conversions > 0
+          ? `$${Math.round(c.spend / c.conversions)}`
+          : 'No conv'
+        return `  - ${c.campaignName}: $${c.spend?.toFixed(0)} spend, ${c.clicks} clicks, ${Math.round(c.conversions || 0)} conv, CPL ${cpl}, Status: ${c.status === 2 ? 'ENABLED' : 'PAUSED'}`
+      }).join('\n')
+
       contextBlock = `
 
 LIVE DRC DASHBOARD DATA — pulled right now:
@@ -105,6 +112,9 @@ GOOGLE ADS (30 days):
 - CPL: $${p?.summary?.cost_per_conversion?.toFixed(0) ?? 'unknown'} (target: $150)
 - Conversions: ${Math.round(p?.summary?.total_conversions || 0)}
 - Active campaigns: ${camps.length}
+
+All Campaigns (30 days):
+${campLines || '  (no campaign data available)'}
 
 CENSUS (Kipu live):
 - Church RTC (Scottsdale, female): ${churchCensus ?? '?'} beds occupied
@@ -118,8 +128,16 @@ CALL TRACKING (CTM 30 days):
 HUBSPOT PIPELINE:
 - Total deals: ${hubspot?.deals_count ?? 0}
 - Closed won (recent sample): ${(hubspot?.recent_deals || []).filter((d: any) => d.stage === 'closedwon').length}
-- Total contacts: ${hubspot?.contacts_count ?? 'unknown'}
+- Total contacts: ${hubspot?.contacts_count ?? 'unknown'}`
 
+      if (context.campaignHistory?.campaigns) {
+        contextBlock += `\n\nCAMPAIGN ALL-TIME HISTORY:\n`
+        context.campaignHistory.campaigns.forEach((c: any) => {
+          contextBlock += `- ${c.campaign_name}: $${c.total_spend.toFixed(0)} total spend, active ${c.first_active || '?'} to ${c.last_active || '?'}, ${Math.round(c.total_conversions)} conv, avg CPA ${c.avg_cpa ? '$' + c.avg_cpa : 'N/A'}, status: ${c.status}\n`
+        })
+      }
+
+      contextBlock += `
 RECOMMENDATION FRAMEWORK:
 - NEVER recommend increasing PMax budget based on call volume alone — cross-reference with CTM star ratings
 - A "conversion" in Google Ads does NOT mean a qualified lead. Use CTM quality scores as the truth metric
