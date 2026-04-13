@@ -31,10 +31,40 @@ MARKETING & COMPLIANCE CONSTRAINTS:
 - Joint Commission accredited — this is a major trust signal, always use it
 
 SEARCH INTENT CLASSIFICATION FOR BEHAVIORAL HEALTH:
-- HIGH INTENT (target aggressively): "inpatient rehab Arizona," "residential mental health treatment Scottsdale," "luxury addiction treatment," "private pay rehab," "executive rehab program," "dual diagnosis treatment Arizona"
-- MEDIUM INTENT (target carefully): "drug rehab near me," "mental health treatment center," "addiction treatment program"
-- LOW INTENT / WRONG FIT (add as negatives): "therapy near me," "counseling," "psychiatrist," "free rehab," "outpatient therapy," "AA meetings," "hotline," "online therapy," "mental health app"
+- HIGH INTENT (target aggressively): "inpatient rehab Arizona," "residential mental health treatment Scottsdale," "luxury addiction treatment," "private pay rehab," "executive rehab program," "dual diagnosis treatment Arizona," "mental hospital phoenix," "inpatient psychiatric hospital"
+- MEDIUM INTENT (target carefully): "drug rehab near me," "mental health treatment center," "addiction treatment program," "long term inpatient psychiatric care," "addiction counseling," "i need counseling now," "psychology referral service"
+- LOW INTENT / WRONG FIT (add as negatives): "free rehab," "AA meetings," "hotline," "online therapy," "mental health app"
 - COMPETITOR SEARCHES: Only bid on competitor terms if you have clear differentiation to offer
+
+DATA-VERIFIED NEGATIVE KEYWORD LIST (April 12, 2026 — based on 6-month search term analysis, $12,781 spend, 421 matched terms):
+CONFIRMED NEGATIVES — ADD TO ALL CAMPAIGNS:
+- therapist, therapists near me (zero conversions across 6 months, pure outpatient intent)
+- online counseling, over the phone counseling (excluded, zero conversions)
+- anger management counseling (zero conversions, wrong service type)
+- counselors [city] — mesa, chandler, tempe variants (wrong location + outpatient provider search)
+- substance abuse counselor (outpatient provider search, $117 spent, 0 conversions)
+- drug abuse counselor ($104 spent, 0 conversions)
+- alcohol screening with a licensed counselor ($158 spent, 0 conversions)
+- forensic psychiatric evaluation ($51 spent, 0 conversions, wrong service)
+- redemption psychiatry (competitor name, $58 spent, 0 conversions)
+- valley psychiatric hospital (competitor name, $65 spent, 0 conversions)
+- crossroads counseling scottsdale (competitor name — note: 1 conversion but competitor traffic)
+
+DO NOT ADD AS NEGATIVES — DATA SHOWS THESE CONVERT:
+- mental hospital, mental hospital phoenix, mental hospitals near me (9 conversions at $422 CPA — high-value cluster)
+- inpatient psychiatric hospital phoenix (2 conversions — residential intent confirmed)
+- long term inpatient psychiatric care (1 conversion — residential intent)
+- psychiatrist (DO NOT negative — DRC is hiring a psychiatrist MD, and "psychiatrist" had 1 conversion at $396)
+- addiction counseling (1 conversion at $188 — crisis/treatment-seeking intent)
+- i need counseling now (1 conversion — crisis intent, not outpatient browsing)
+- psychology referral service (1 conversion — referral pathway)
+
+NEW KEYWORD OPPORTUNITIES (based on psychiatrist hire + data):
+- psychiatrist Arizona luxury
+- inpatient psychiatrist Phoenix
+- psychiatric evaluation and treatment Arizona
+- dual diagnosis psychiatrist Arizona
+- luxury psychiatric care Scottsdale
 
 CALL QUALITY STANDARDS:
 - A real qualified lead is a family member or patient calling about residential admission with insurance coverage
