@@ -95,8 +95,11 @@ function AgentChatContent() {
         fetch('/api/proxy/api/google-ads/campaign-history', {
           headers: { Authorization: `Bearer ${t}` }
         }).then(r => r.json()).catch(() => null),
-      ]).then(([performance, campaigns, census, ctm, hubspot, campaignHistory]) => {
-        setLiveContext({ performance, campaigns, census, ctm, hubspot, campaignHistory })
+        fetch('/api/proxy/api/ctm/qualified-leads-deep?days=30', {
+          headers: { Authorization: `Bearer ${t}` }
+        }).then(r => r.json()).catch(() => null),
+      ]).then(([performance, campaigns, census, ctm, hubspot, campaignHistory, qualifiedLeadsDeep]) => {
+        setLiveContext({ performance, campaigns, census, ctm, hubspot, campaignHistory, qualifiedLeadsDeep })
       }).finally(() => setContextLoading(false))
     } else if (selectedAgent.id === '07') {
       setContextLoading(true)
@@ -117,8 +120,11 @@ function AgentChatContent() {
         fetch('/api/proxy/api/google-ads/campaign-history', {
           headers: { Authorization: `Bearer ${t}` }
         }).then(r => r.json()).catch(() => null),
-      ]).then(([performance, campaigns, ctmQuality, campaignQuality, campaignHistory]) => {
-        setLiveContext({ performance, campaigns, ctmQuality, campaignQuality, campaignHistory })
+        fetch('/api/proxy/api/ctm/qualified-leads-deep?days=30', {
+          headers: { Authorization: `Bearer ${t}` }
+        }).then(r => r.json()).catch(() => null),
+      ]).then(([performance, campaigns, ctmQuality, campaignQuality, campaignHistory, qualifiedLeadsDeep]) => {
+        setLiveContext({ performance, campaigns, ctmQuality, campaignQuality, campaignHistory, qualifiedLeadsDeep })
       }).finally(() => setContextLoading(false))
     } else if (selectedAgent.id === '03' || selectedAgent.id === '18') {
       setContextLoading(true)

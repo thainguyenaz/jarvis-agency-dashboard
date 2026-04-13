@@ -10,7 +10,17 @@ You oversee all 20 marketing agents and are responsible for the overall marketin
 strategy. You have visibility into all data — occupancy, ad spend, SEO, social,
 referrals, and content. You advise Thai Nguyen (CEO) on high-level marketing
 decisions and coordinate between agents.
-Phase 1: Advise only. No execution without Thai approval.`,
+Phase 1: Advise only. No execution without Thai approval.
+
+CORE PERFORMANCE RULE — NON-NEGOTIABLE:
+The only metric that matters is 4-5 star CTM qualified leads with call duration >= 120 seconds.
+- A Google Ads "conversion" means nothing unless it results in a 4 or 5 star CTM call lasting 2+ minutes
+- Any campaign with zero 4-5 star calls in 30 days is FAILING regardless of conversion count
+- Any campaign with CPL > $1,500 per qualified lead is CRITICAL and requires immediate review
+- Short calls under 60 seconds are FAKE or WRONG NUMBER — never count these
+- Calls 60-120 seconds are BORDERLINE — treat as unqualified unless tagged otherwise
+- Calls 120+ seconds with 4-5 stars are TRUE QUALIFIED LEADS
+- Every recommendation must be tied back to: "does this drive more 4-5 star calls over 2 minutes?"`,
 
   '03': `You are Agent 03, the Sr SEO Expert for Desert Recovery Centers (DRC).
 You specialize in organic search rankings, technical SEO, content strategy, and
@@ -28,7 +38,17 @@ campaign optimization, budget allocation, bid strategy, and landing-page routing
 Target CPL is under $150.
 Guardrails: max 2 changes per campaign per week, max 20% bid adjustment,
 budget increases over 30% require Thai approval, no changes during learning phase.
-Phase 1: Advise only. No execution without Thai approval.`,
+Phase 1: Advise only. No execution without Thai approval.
+
+CORE PERFORMANCE RULE — NON-NEGOTIABLE:
+The only metric that matters is 4-5 star CTM qualified leads with call duration >= 120 seconds.
+- A Google Ads "conversion" means nothing unless it results in a 4 or 5 star CTM call lasting 2+ minutes
+- Any campaign with zero 4-5 star calls in 30 days is FAILING regardless of conversion count
+- Any campaign with CPL > $1,500 per qualified lead is CRITICAL and requires immediate review
+- Short calls under 60 seconds are FAKE or WRONG NUMBER — never count these
+- Calls 60-120 seconds are BORDERLINE — treat as unqualified unless tagged otherwise
+- Calls 120+ seconds with 4-5 stars are TRUE QUALIFIED LEADS
+- Every recommendation must be tied back to: "does this drive more 4-5 star calls over 2 minutes?"`,
 
   '11': `You are Agent 11, the Reputation and Directory Agent for Desert Recovery Centers (DRC).
 You manage DRC's online reputation across Google Business Profile, Yelp, Healthgrades,
@@ -160,6 +180,19 @@ HUBSPOT PIPELINE:
         })
       }
 
+      // Inject deep qualified leads data
+      const qlDeep01 = context?.qualifiedLeadsDeep
+      if (qlDeep01?.summary) {
+        const qs = qlDeep01.summary
+        contextBlock += `\n\nTRUE QUALIFIED LEADS (4-5 star, 2+ min calls, last 30 days):\n`
+        contextBlock += `Total: ${qs.qualified_leads} calls\n`
+        contextBlock += `By source: ${(qs.by_source || []).map((s: any) => `${s.source} (${s.count}, avg ${s.avg_duration}s)`).join(', ')}\n`
+        contextBlock += `By campaign: ${(qs.by_campaign || []).map((c: any) => `${c.campaign} (${c.count}, avg ${c.avg_duration}s)`).join(', ')}\n`
+        contextBlock += `4-star calls: ${qs.by_score?.['4'] ?? 0} | 5-star calls: ${qs.by_score?.['5'] ?? 0}\n`
+        contextBlock += `Average duration of qualified calls: ${qs.avg_duration_qualified}s\n`
+        contextBlock += `Filtered out: ${qs.filtered_out_short_duration} short (<2min), ${qs.filtered_out_unanswered} unanswered\n`
+      }
+
       contextBlock += `
 RECOMMENDATION FRAMEWORK:
 - NEVER recommend increasing PMax budget based on call volume alone — cross-reference with CTM star ratings
@@ -254,6 +287,19 @@ RECOMMENDATION FRAMEWORK:
         campHist.campaigns.slice(0, 8).forEach((c: any) => {
           contextBlock += `- ${c.campaign_name}: $${c.total_spend?.toFixed(0)} total, ${Math.round(c.total_conversions)} conv, CPA $${c.avg_cpa ?? 'N/A'}, ${c.first_active || '?'}–${c.last_active || '?'}\n`
         })
+      }
+
+      // Inject deep qualified leads data
+      const qlDeep07 = context?.qualifiedLeadsDeep
+      if (qlDeep07?.summary) {
+        const qs = qlDeep07.summary
+        contextBlock += `\nTRUE QUALIFIED LEADS (4-5 star, 2+ min calls, last 30 days):\n`
+        contextBlock += `Total: ${qs.qualified_leads} calls\n`
+        contextBlock += `By source: ${(qs.by_source || []).map((s: any) => `${s.source} (${s.count}, avg ${s.avg_duration}s)`).join(', ')}\n`
+        contextBlock += `By campaign: ${(qs.by_campaign || []).map((c: any) => `${c.campaign} (${c.count}, avg ${c.avg_duration}s)`).join(', ')}\n`
+        contextBlock += `4-star calls: ${qs.by_score?.['4'] ?? 0} | 5-star calls: ${qs.by_score?.['5'] ?? 0}\n`
+        contextBlock += `Average duration of qualified calls: ${qs.avg_duration_qualified}s\n`
+        contextBlock += `Filtered out: ${qs.filtered_out_short_duration} short (<2min), ${qs.filtered_out_unanswered} unanswered\n`
       }
 
       contextBlock += `\nKEY INSIGHT: True qualified CPL is typically much higher than Google-reported CPL. Always reference CTM star ratings, not Google conversion counts, when evaluating performance.\n`
