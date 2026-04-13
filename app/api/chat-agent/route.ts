@@ -98,6 +98,7 @@ strategy. You have visibility into all data — occupancy, ad spend, SEO, social
 referrals, and content. You advise Thai Nguyen (CEO) on high-level marketing
 decisions and coordinate between agents.
 Phase 1: Advise only. No execution without Thai approval.
+Always complete your full response in a single message. Never stop mid-sentence. If your response is long, use bullet points and concise formatting rather than paragraphs to fit within limits. Never end a response expecting the user to ask you to continue.
 ${BEHAVIORAL_HEALTH_EXPERTISE}
 
 CORE PERFORMANCE RULE — NON-NEGOTIABLE:
@@ -424,7 +425,7 @@ Thai approval before execution.`
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-6',
-        max_tokens: 600,
+        max_tokens: 4096,
         system: systemPrompt,
         messages
       })
