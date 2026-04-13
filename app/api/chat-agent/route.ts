@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { getContext } from '@/lib/jarvis-data-server'
 
 const AGENT_PERSONAS: Record<string, string> = {
   '01': `You are Agent 01, the Sr CMO Orchestrator for Desert Recovery Centers (DRC),
@@ -83,57 +84,79 @@ export async function POST(req: Request) {
 
     const persona = AGENT_PERSONAS[agentId] || DEFAULT_PERSONA
 
-    // Inject live data context for relevant agents
+    // Fetch server-side data for agents that need live context
     let contextBlock = ''
-    if (agentId === '01' && context) {
-      const p = context.performance
-      const camps = context.campaigns?.campaigns || []
-      const census = context.census
-      const ctm = context.ctm
-      const hubspot = context.hubspot
+    const serverData = (agentId === '01' || agentId === '07')
+      ? await getContext(agentId).catch((err: any) => {
+          console.error(`[AGENT-${agentId}] Server data fetch failed:`, err.message)
+          return null
+        })
+      : null
 
-      const churchCensus = census?.byLocation?.find((l: any) => l.name?.toLowerCase().includes('church'))?.census
-      const frierCensus  = census?.byLocation?.find((l: any) => l.name?.toLowerCase().includes('frier'))?.census
+    if (agentId === '01') {
+      // Use server-side data, fall back to client context
+      const p = serverData?.performance || context?.performance
+      const census = serverData?.census || context?.census
+      const ctm = serverData?.ctmQuality || context?.ctm
+      const hubspot = serverData?.hubspot || context?.hubspot
+      const cq = serverData?.campaignQuality || context?.campaignQuality
+      const campHist = serverData?.campaignHistory || context?.campaignHistory
 
-      const campLines = camps.slice(0, 20).map((c: any) => {
-        const cpl = c.conversions > 0
-          ? `$${Math.round(c.spend / c.conversions)}`
-          : 'No conv'
-        return `  - ${c.campaignName}: $${c.spend?.toFixed(0)} spend, ${c.clicks} clicks, ${Math.round(c.conversions || 0)} conv, CPL ${cpl}, Status: ${c.status === 2 ? 'ENABLED' : 'PAUSED'}`
-      }).join('\n')
+      const pSummary = p?.summary || p
+      const churchLoc = (census?.locations || census?.byLocation || [])
+        .find((l: any) => l.name?.toLowerCase().includes('church'))
+      const frierLoc = (census?.locations || census?.byLocation || [])
+        .find((l: any) => l.name?.toLowerCase().includes('frier'))
+
+      const ctmSummary = ctm?.summary || ctm
+      const sd = ctmSummary?.score_distribution || {}
 
       contextBlock = `
 
-LIVE DRC DASHBOARD DATA — pulled right now:
+LIVE DRC DASHBOARD DATA (server-side, SQLite-first):
 
-GOOGLE ADS (30 days):
-- Spend: $${p?.summary?.total_spend?.toFixed(0) ?? 'unknown'}
-- Clicks: ${p?.summary?.total_clicks ?? 'unknown'}
-- CPL: $${p?.summary?.cost_per_conversion?.toFixed(0) ?? 'unknown'} (target: $150)
-- Conversions: ${Math.round(p?.summary?.total_conversions || 0)}
-- Active campaigns: ${camps.length}
+GOOGLE ADS (7d):
+- Spend: $${pSummary?.total_spend?.toFixed(0) ?? 'unknown'}
+- Clicks: ${pSummary?.total_clicks ?? 'unknown'}
+- CPC: $${pSummary?.avg_cpc?.toFixed(2) ?? 'unknown'}
+- CPL: $${pSummary?.cost_per_conversion?.toFixed(0) ?? 'unknown'} (target: $150)
+- Conversions: ${Math.round(pSummary?.total_conversions || 0)}
+- CTR: ${pSummary?.avg_ctr?.toFixed(1) ?? 'unknown'}%
 
-All Campaigns (30 days):
-${campLines || '  (no campaign data available)'}
+CTM CALL QUALITY (30d):
+- Total calls: ${ctmSummary?.total_calls ?? 'unknown'}
+- Qualification rate: ${ctmSummary?.qualification_rate ?? 'unknown'}%
+- 5-star qualified: ${sd['5'] ?? 0}
+- 4-star potential: ${sd['4'] ?? 0}
+- Qualified leads: ${ctmSummary?.qualified_leads ?? 'unknown'}`
 
-CENSUS (Kipu live):
-- Church RTC (Scottsdale, female): ${churchCensus ?? '?'} beds occupied
-- Frier RTC (Glendale, male): ${frierCensus ?? '?'} beds occupied
+      if (cq?.campaigns) {
+        const withCPL = cq.campaigns.filter((c: any) => c.qualified_cpl != null)
+          .sort((a: any, b: any) => a.qualified_cpl - b.qualified_cpl)
+        if (withCPL.length > 0) {
+          contextBlock += `\n\nTOP CAMPAIGNS BY QUALIFIED CPL (30d):`
+          withCPL.slice(0, 5).forEach((c: any) => {
+            contextBlock += `\n- ${c.campaign}: $${c.qualified_cpl} CPL, ${c.qualified_leads} qualified of ${c.total_calls} calls (${c.qualification_rate}%)`
+          })
+        }
+      }
 
-CALL TRACKING (CTM 30 days):
-- Total calls: ${ctm?.total_calls_30d ?? 'unknown'}
-- Answer rate: ${ctm?.answer_rate ?? 'unknown'}%
-- Missed calls: ${ctm?.total_missed ?? ctm?.missed_calls ?? 'unknown'}
+      contextBlock += `
+
+CENSUS (Kipu):
+- Church RTC (Scottsdale, female): ${churchLoc?.occupied ?? churchLoc?.census ?? '?'}/${churchLoc?.beds ?? '10'} beds
+- Frier RTC (Glendale, male): ${frierLoc?.occupied ?? frierLoc?.census ?? '?'}/${frierLoc?.beds ?? '10'} beds
+- Occupancy: ${census?.occupancyPct ?? '?'}%
 
 HUBSPOT PIPELINE:
-- Total deals: ${hubspot?.deals_count ?? 0}
-- Closed won (recent sample): ${(hubspot?.recent_deals || []).filter((d: any) => d.stage === 'closedwon').length}
-- Total contacts: ${hubspot?.contacts_count ?? 'unknown'}`
+- Total deals: ${hubspot?.deals_count ?? hubspot?.total_deals ?? 0}
+- Total contacts: ${hubspot?.contacts_count ?? 'unknown'}
+- Top sources: ${Object.entries(hubspot?.lead_sources || {}).sort((a: any, b: any) => b[1] - a[1]).slice(0, 3).map(([k, v]) => `${k} (${v})`).join(', ') || 'unknown'}`
 
-      if (context.campaignHistory?.campaigns) {
+      if (campHist?.campaigns) {
         contextBlock += `\n\nCAMPAIGN ALL-TIME HISTORY:\n`
-        context.campaignHistory.campaigns.forEach((c: any) => {
-          contextBlock += `- ${c.campaign_name}: $${c.total_spend.toFixed(0)} total spend, active ${c.first_active || '?'} to ${c.last_active || '?'}, ${Math.round(c.total_conversions)} conv, avg CPA ${c.avg_cpa ? '$' + c.avg_cpa : 'N/A'}, status: ${c.status}\n`
+        campHist.campaigns.slice(0, 8).forEach((c: any) => {
+          contextBlock += `- ${c.campaign_name}: $${c.total_spend?.toFixed(0)} total, ${Math.round(c.total_conversions)} conv, CPA $${c.avg_cpa ?? 'N/A'}, active ${c.first_active || '?'}–${c.last_active || '?'}, ${c.status}\n`
         })
       }
 
@@ -148,11 +171,7 @@ RECOMMENDATION FRAMEWORK:
 Analyze the live numbers above to give Thai a complete strategic picture.
 Do not ask Thai to share data you already have above. Cite actual numbers from
 this context in your response.`
-    } else if (agentId === '07' && context?.performance) {
-      // Detect requested time range from the user message. Default is 7d
-      // (daily check-in bias — most Agent 07 questions are "how are we doing
-      // today / this week"). If the user explicitly asks about "this month",
-      // "30 days", "quarter", etc. we widen the window.
+    } else if (agentId === '07') {
       const msgLower = (message || '').toLowerCase()
       let requestedDays = 7
       if (/\b90 days?\b|\bquarter\b|\blast 3 months?\b|\bpast 90\b/.test(msgLower)) {
@@ -161,89 +180,65 @@ this context in your response.`
         requestedDays = 30
       } else if (/\blast 14\b|\b14 days?\b|\btwo weeks?\b|\bpast 14\b/.test(msgLower)) {
         requestedDays = 14
-      } else if (/\btoday\b|\byesterday\b|\bthis week\b|\bweek\b|\brecent(ly)?\b|\blast 7\b|\b7 days?\b|\bpast week\b/.test(msgLower)) {
-        requestedDays = 7
       }
 
-      let p: any = context.performance
-      let camps: any[] = context.campaigns?.campaigns || []
+      // Use server-side data as primary, client context as fallback
+      let p: any = serverData?.performance || context?.performance
+      const pSummary = p?.summary || p
 
-      // Re-fetch if the user asked for a range different from the client's 30d default.
-      if (requestedDays !== 30 && authHeader) {
+      // Re-fetch for non-7d ranges via API
+      if (requestedDays !== 7 && authHeader) {
         try {
-          const [perfRes, campRes] = await Promise.all([
-            fetch(`${VPS_BASE}/api/google-ads/performance?days=${requestedDays}`, {
-              headers: { Authorization: authHeader }
-            }),
-            fetch(`${VPS_BASE}/api/google-ads/campaigns?days=${requestedDays}`, {
-              headers: { Authorization: authHeader }
-            }),
-          ])
+          const perfRes = await fetch(`${VPS_BASE}/api/google-ads/performance?days=${requestedDays}`, {
+            headers: { Authorization: authHeader }
+          })
           if (perfRes.ok) p = await perfRes.json()
-          if (campRes.ok) {
-            const cj = await campRes.json()
-            camps = cj?.campaigns || camps
-          }
         } catch (err: any) {
-          console.error('[chat-agent] days re-fetch failed:', err?.message)
+          console.error('[AGENT-07] days re-fetch failed:', err?.message)
         }
       }
 
+      const ps = requestedDays === 7 ? pSummary : (p?.summary || p)
       const rangeLabel = `${requestedDays} day${requestedDays === 1 ? '' : 's'}`
-
-      const campLines = camps.slice(0, 20).map((c: any) => {
-        const cpl = c.conversions > 0
-          ? `$${Math.round(c.spend / c.conversions)}`
-          : 'No conv'
-        return `  - ${c.campaignName}: $${c.spend?.toFixed(0)} spend, ${c.clicks} clicks, ${Math.round(c.conversions || 0)} conv, CPL ${cpl}, Status: ${c.status === 2 ? 'ENABLED' : 'PAUSED'}`
-      }).join('\n')
 
       contextBlock = `
 
-LIVE GOOGLE ADS DATA — pulled directly from your account right now:
+LIVE GOOGLE ADS DATA (server-side, SQLite-first):
 
 Account Summary (${rangeLabel}):
-- Total Spend: $${p.summary?.total_spend?.toFixed(2)}
-- Clicks: ${p.summary?.total_clicks}
-- CPC: $${p.summary?.avg_cpc?.toFixed(2)}
-- Conversions: ${Math.round(p.summary?.total_conversions || 0)}
-- CPL: $${p.summary?.cost_per_conversion?.toFixed(2)} (target: $150)
-- CTR: ${p.summary?.avg_ctr?.toFixed(2)}%
-
-All ${camps.length} Campaigns (Status: ENABLED means serving, PAUSED means not serving):
-${campLines}
+- Total Spend: $${ps?.total_spend?.toFixed(2) ?? 'unknown'}
+- Clicks: ${ps?.total_clicks ?? 'unknown'}
+- CPC: $${ps?.avg_cpc?.toFixed(2) ?? 'unknown'}
+- Conversions: ${Math.round(ps?.total_conversions || 0)}
+- CPL: $${ps?.cost_per_conversion?.toFixed(2) ?? 'unknown'} (target: $150)
+- CTR: ${ps?.avg_ctr?.toFixed(2) ?? 'unknown'}%
 
 RECOMMENDATION FRAMEWORK:
-- A "conversion" in Google Ads does NOT mean a qualified lead — always cross-reference with CTM quality scores below before drawing conclusions
-- NEVER recommend increasing PMax budget based on call volume alone; PMax historically produces low-duration hangup calls that inflate conversion counts without driving qualified leads
-- When a campaign shows zero or very low conversions at meaningful spend, diagnose root cause by looking at: ad copy intent, match types, landing-page destination and form functionality, Quality Score, and CTM call quality for that source — do NOT assume a broken landing page without verifying the URL loads and has a working form
-- When recommending pauses, budget shifts, or bid changes, cite the exact campaign name and the specific metric threshold that justifies the action
-- Free channels (GBP, Organic) should be evaluated on qualified-lead output, not just call volume
+- A "conversion" in Google Ads does NOT mean a qualified lead — always cross-reference with CTM quality scores below
+- NEVER recommend increasing PMax budget based on call volume alone
+- When recommending pauses, budget shifts, or bid changes, cite the exact campaign name and metric
+- Free channels (GBP, Organic) should be evaluated on qualified-lead output, not just call volume`
 
-You have full campaign-level data above plus CTM quality data injected below. Do not ask Thai to share data you already have. Analyze what you have and give specific recommendations with exact campaign names and dollar amounts from this live context.`
-
-      // Live CTM quality data injection
-      const cq = context.campaignQuality
-      const ctmQ = context.ctmQuality
+      // CTM quality from server data
+      const cq = serverData?.campaignQuality || context?.campaignQuality
+      const ctmQ = serverData?.ctmQuality || context?.ctmQuality
 
       if (cq?.campaigns) {
-        contextBlock += `\n\nCTM QUALITY CORRELATION (live data):\n`
+        contextBlock += `\n\nCTM QUALITY CORRELATION:\n`
         contextBlock += `Account qualification rate: ${cq.account_summary?.account_qualification_rate}%\n`
         contextBlock += `Blended qualified CPL: $${cq.account_summary?.blended_qualified_cpl}\n\n`
         contextBlock += `CAMPAIGN TRUE QUALIFIED CPL:\n`
         cq.campaigns.forEach((c: any) => {
           if (c.ad_spend > 0) {
-            contextBlock += `- ${c.campaign}: $${c.ad_spend} spend, ${c.qualified_leads} qualified leads (4-5★), qualified CPL: $${c.qualified_cpl || 'NONE'}, avg duration: ${c.avg_duration_seconds}s, verdict: ${c.verdict}\n`
+            contextBlock += `- ${c.campaign}: $${c.ad_spend} spend, ${c.qualified_leads} qualified (4-5★), CPL: $${c.qualified_cpl || 'NONE'}, verdict: ${c.verdict}\n`
           }
         })
       }
 
       if (ctmQ?.summary) {
-        contextBlock += `\nCTM QUALITY SUMMARY (30 days):\n`
-        contextBlock += `Total calls: ${ctmQ.summary.total_calls}\n`
-        contextBlock += `5-star qualified: ${ctmQ.summary.score_distribution?.['5'] ?? 0}\n`
-        contextBlock += `4-star potential: ${ctmQ.summary.score_distribution?.['4'] ?? 0}\n`
-        contextBlock += `Overall qual rate: ${ctmQ.summary.qualification_rate}%\n`
+        const sd = ctmQ.summary.score_distribution || {}
+        contextBlock += `\nCTM QUALITY SUMMARY (30d):\n`
+        contextBlock += `Total calls: ${ctmQ.summary.total_calls}, qual rate: ${ctmQ.summary.qualification_rate}%, 5★: ${sd['5'] ?? 0}, 4★: ${sd['4'] ?? 0}\n`
 
         if (ctmQ.by_source) {
           contextBlock += `\nQUALIFIED LEADS BY SOURCE:\n`
@@ -253,14 +248,15 @@ You have full campaign-level data above plus CTM quality data injected below. Do
         }
       }
 
-      if (context.campaignHistory?.campaigns) {
+      const campHist = serverData?.campaignHistory || context?.campaignHistory
+      if (campHist?.campaigns) {
         contextBlock += `\nCAMPAIGN ALL-TIME HISTORY:\n`
-        context.campaignHistory.campaigns.forEach((c: any) => {
-          contextBlock += `- ${c.campaign_name}: $${c.total_spend.toFixed(0)} total spend, active ${c.first_active || '?'} to ${c.last_active || '?'}, ${Math.round(c.total_conversions)} conv, avg CPA ${c.avg_cpa ? '$' + c.avg_cpa : 'N/A'}, status: ${c.status}\n`
+        campHist.campaigns.slice(0, 8).forEach((c: any) => {
+          contextBlock += `- ${c.campaign_name}: $${c.total_spend?.toFixed(0)} total, ${Math.round(c.total_conversions)} conv, CPA $${c.avg_cpa ?? 'N/A'}, ${c.first_active || '?'}–${c.last_active || '?'}\n`
         })
       }
 
-      contextBlock += `\nKEY INSIGHT: True qualified CPL is typically much higher than Google-reported CPL because many Google conversions are low-quality calls. Always reference CTM star ratings from the live data above, not Google conversion counts, when evaluating campaign performance.\n`
+      contextBlock += `\nKEY INSIGHT: True qualified CPL is typically much higher than Google-reported CPL. Always reference CTM star ratings, not Google conversion counts, when evaluating performance.\n`
     }
 
     const systemPrompt = `${persona}${contextBlock}
