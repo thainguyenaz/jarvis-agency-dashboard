@@ -210,6 +210,7 @@ function AgentChatContent() {
 
   async function deleteConversation(convId: string, e: React.MouseEvent) {
     e.stopPropagation()
+    if (!confirm('Delete this conversation? This cannot be undone.')) return
     const t = localStorage.getItem('jarvis_token') || ''
     await fetch(`/api/proxy/api/conversations/${convId}`, {
       method: 'DELETE',
@@ -404,7 +405,8 @@ function AgentChatContent() {
                   <button
                     onClick={(e) => deleteConversation(conv.id, e)}
                     className="text-jarvis-dim hover:text-jarvis-red text-sm px-2 py-1 opacity-40"
-                  >✕</button>
+                    title="Delete conversation"
+                  >🗑</button>
                 </div>
               </div>
             ))
@@ -582,7 +584,8 @@ function AgentChatContent() {
                     <button
                       onClick={(e) => deleteConversation(conv.id, e)}
                       className="text-jarvis-dim hover:text-jarvis-red text-xs opacity-0 group-hover:opacity-100"
-                    >✕</button>
+                      title="Delete conversation"
+                    >🗑</button>
                   </div>
                 </div>
               ))

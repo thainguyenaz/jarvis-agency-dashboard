@@ -88,7 +88,14 @@ REVENUE & OCCUPANCY CONTEXT:
 - One qualified admission can be worth $30,000-$90,000+ depending on LOS and insurance reimbursement
 - The math: improving from 51 to 100 true qualified leads/month at current admission rate = significant revenue impact`
 
-const CRITICAL_INSTRUCTION = `CRITICAL INSTRUCTION: Always complete your full response in a single message. Never stop mid-sentence or mid-thought. Never end a response expecting the user to say "continue." If your response is long, use concise bullet points instead of paragraphs to stay within limits. A complete response that covers less ground is better than an incomplete response that covers more.`
+const CRITICAL_INSTRUCTION = `RESPONSE FORMAT RULES — FOLLOW EXACTLY:
+- Always complete your FULL response in ONE message. Never truncate. Never stop mid-thought.
+- Use clear headers with --- separators between sections
+- Use bullet points for lists, not paragraphs
+- Use specific numbers and data — never say 'unknown' if data is available
+- Be direct and detailed like a senior analyst, not a paragraph-writing assistant
+- Every recommendation must cite the specific data source (CTM, Google Ads API, Kipu, etc.)
+- Minimum response length for strategic questions: 500 words with actual numbers`
 
 const AGENT_PERSONAS: Record<string, string> = {
   '01': `${CRITICAL_INSTRUCTION}
@@ -211,14 +218,12 @@ export async function POST(req: Request) {
 
     const persona = AGENT_PERSONAS[agentId] || DEFAULT_PERSONA
 
-    // Fetch server-side data for agents that need live context
+    // Fetch server-side data for all agents — every agent gets live context
     let contextBlock = ''
-    const serverData = (agentId === '01' || agentId === '07')
-      ? await getContext(agentId).catch((err: any) => {
-          console.error(`[AGENT-${agentId}] Server data fetch failed:`, err.message)
-          return null
-        })
-      : null
+    const serverData = await getContext(agentId).catch((err: any) => {
+      console.error(`[AGENT-${agentId}] Server data fetch failed:`, err.message)
+      return null
+    })
 
     if (agentId === '01') {
       // Use server-side data, fall back to client context
@@ -410,16 +415,48 @@ RECOMMENDATION FRAMEWORK:
       }
 
       contextBlock += `\nKEY INSIGHT: True qualified CPL is typically much higher than Google-reported CPL. Always reference CTM star ratings, not Google conversion counts, when evaluating performance.\n`
+    } else if (['03', '11', '18', '20'].includes(agentId)) {
+      // All marketing/admissions agents get CTM quality data for cross-referencing
+      const ctm = serverData?.ctmQuality || context?.ctm || context?.ctmQuality
+      const ctmSummary = ctm?.summary || ctm
+      const sd = ctmSummary?.score_distribution || {}
+
+      if (ctmSummary?.total_calls) {
+        contextBlock = `
+
+CTM CALL QUALITY DATA (30d — for cross-reference):
+- Total calls: ${ctmSummary.total_calls}
+- Qualification rate: ${ctmSummary.qualification_rate ?? '?'}%
+- 5-star qualified: ${sd['5'] ?? 0}
+- 4-star potential: ${sd['4'] ?? 0}
+- Qualified leads: ${ctmSummary.qualified_leads ?? '?'}`
+
+        if (ctm?.by_source) {
+          contextBlock += `\n\nQUALIFIED LEADS BY SOURCE:`
+          ctm.by_source.slice(0, 8).forEach((s: any) => {
+            contextBlock += `\n- ${s.source}: ${s.qualified} qualified (${s.scores?.['5'] ?? 0} five-star), ${s.qualificationRate}% qual rate`
+          })
+        }
+
+        contextBlock += `\n\nCORE METRIC: Only 4-5 star CTM calls lasting 2+ minutes count as true qualified leads. Reference this data when evaluating any marketing channel performance.`
+      }
+
+      // Inject deep qualified leads data if available
+      const qlDeep = context?.qualifiedLeadsDeep
+      if (qlDeep?.summary) {
+        const qs = qlDeep.summary
+        contextBlock += `\n\nTRUE QUALIFIED LEADS (4-5 star, 2+ min calls, last 30 days):\nTotal: ${qs.qualified_leads} calls\n`
+        contextBlock += `By source: ${(qs.by_source || []).map((s: any) => `${s.source} (${s.count}, avg ${s.avg_duration}s)`).join(', ')}\n`
+        contextBlock += `4-star calls: ${qs.by_score?.['4'] ?? 0} | 5-star calls: ${qs.by_score?.['5'] ?? 0}\n`
+      }
     }
 
     const systemPrompt = `${persona}${contextBlock}
 
-Always respond in clean paragraphs. Never use bullet points, numbered lists,
-or markdown headers with ###. Write conversationally as if speaking directly
-to Thai Nguyen, the CEO. Keep responses under 200 words unless Thai asks for
-more detail. Be direct and specific. Reference actual numbers when relevant.
-If recommending a change that requires approval, clearly state it requires
-Thai approval before execution.`
+You are speaking directly to Thai Nguyen, the CEO. Be direct and specific.
+Reference actual numbers when relevant. Use headers with --- separators and
+bullet points — not paragraphs. If recommending a change that requires
+approval, clearly state it requires Thai approval before execution.`
 
     const messages = [
       ...(history || []).slice(-10).map((h: any) => ({
@@ -437,7 +474,7 @@ Thai approval before execution.`
         'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
+        model: 'claude-opus-4-5-20251001',
         max_tokens: 4096,
         system: systemPrompt,
         messages
