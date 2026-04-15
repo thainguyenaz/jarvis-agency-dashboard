@@ -18,6 +18,9 @@ export default function LoginPage() {
       if (data.token) {
         localStorage.setItem('jarvis_token', data.token)
         localStorage.setItem('jarvis_user', JSON.stringify(data.user || { username }))
+        localStorage.setItem('jarvis_role', data.role || data.user?.role || 'user')
+        localStorage.setItem('jarvis_username', data.user?.username || username)
+        localStorage.setItem('jarvis_fullname', data.user?.full_name || username)
         router.push('/dashboard')
       } else {
         setError('Invalid credentials')

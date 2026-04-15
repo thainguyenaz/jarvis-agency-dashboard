@@ -15,6 +15,8 @@ const NAV_ITEMS = [
   { href: '/dashboard/chat', label: 'AGENT CHAT', icon: '💬' },
 ]
 
+const ADMIN_NAV = { href: '/dashboard/admin', label: 'ADMIN', icon: '🔒' }
+
 export default function DashboardLayout({
   children,
 }: {
@@ -37,17 +39,28 @@ export default function DashboardLayout({
   function handleLogout() {
     localStorage.removeItem('jarvis_token')
     localStorage.removeItem('jarvis_user')
+    localStorage.removeItem('jarvis_role')
+    localStorage.removeItem('jarvis_username')
+    localStorage.removeItem('jarvis_fullname')
     router.push('/')
   }
+
+  const isAdmin = user?.role === 'admin'
+  const displayName = user?.full_name || user?.username || ''
 
   return (
     <div className="min-h-screen bg-jarvis-bg">
       {/* Mobile top nav */}
       <div className="md:hidden flex items-center justify-between p-4 border-b border-jarvis-border bg-jarvis-surface">
-        <div className="text-jarvis-cyan font-mono font-bold text-sm">
-          🤖 JARVIS 2.0
+        <div className="flex items-center gap-2">
+          <div className="text-jarvis-cyan font-mono font-bold text-sm">
+            🤖 JARVIS
+          </div>
+          {displayName && (
+            <div className="text-jarvis-green font-mono text-xs">● {displayName.split(' ')[0]}</div>
+          )}
         </div>
-        <div className="flex gap-3 overflow-x-auto">
+        <div className="flex gap-3 overflow-x-auto items-center">
           {[
             { href: '/dashboard', label: '📊' },
             { href: '/dashboard/google-ads', label: '🎯' },
@@ -58,6 +71,7 @@ export default function DashboardLayout({
             { href: '/dashboard/agents', label: '🤖' },
             { href: '/dashboard/approvals', label: '✅' },
             { href: '/dashboard/chat', label: '💬' },
+            ...(isAdmin ? [{ href: '/dashboard/admin', label: '🔒' }] : []),
           ].map(item => (
             <Link
               key={item.href}
@@ -67,6 +81,7 @@ export default function DashboardLayout({
               {item.label}
             </Link>
           ))}
+          <button onClick={handleLogout} className="text-jarvis-dim hover:text-jarvis-red text-sm ml-1">⏻</button>
         </div>
       </div>
 
@@ -82,7 +97,8 @@ export default function DashboardLayout({
           </div>
           {user && (
             <div className="text-jarvis-green text-xs mt-2 font-mono">
-              ● {user.username?.toUpperCase()}
+              ● {displayName}
+              {isAdmin && <span className="text-jarvis-dim ml-1">(admin)</span>}
             </div>
           )}
         </div>
@@ -103,6 +119,20 @@ export default function DashboardLayout({
               <span>{item.label}</span>
             </Link>
           ))}
+          {isAdmin && (
+            <Link
+              href={ADMIN_NAV.href}
+              className={`flex items-center gap-3 px-3 py-2 rounded font-mono text-sm
+                         transition-all mt-2 border-t border-jarvis-border pt-3 ${
+                           pathname === ADMIN_NAV.href
+                             ? 'bg-jarvis-cyan bg-opacity-10 text-jarvis-cyan border border-jarvis-cyan border-opacity-30'
+                             : 'text-jarvis-dim hover:text-jarvis-text hover:bg-jarvis-border'
+                         }`}
+            >
+              <span>{ADMIN_NAV.icon}</span>
+              <span>{ADMIN_NAV.label}</span>
+            </Link>
+          )}
         </nav>
 
         <div className="p-4 border-t border-jarvis-border">
