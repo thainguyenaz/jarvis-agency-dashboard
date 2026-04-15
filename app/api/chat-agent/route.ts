@@ -72,7 +72,7 @@ CALL QUALITY STANDARDS:
 - Calls under 60 seconds = wrong number, hangup, or non-English speaker
 - Calls 60-120 seconds = borderline, may be information seekers
 - Calls 120+ seconds with 4-5 star CTM rating = TRUE QUALIFIED LEAD
-- Speed to lead matters critically — DRC's current average is 12.4 minutes vs 5 minute industry standard. Every minute of delay loses admissions to competitors
+- Speed to lead matters critically — industry standard is under 5 minutes. Every minute of delay loses admissions to competitors. Use live CTM data for current average, not hardcoded values
 
 COMPETITIVE LANDSCAPE IN ARIZONA:
 - Arizona is a highly competitive behavioral health market
@@ -81,8 +81,8 @@ COMPETITIVE LANDSCAPE IN ARIZONA:
 - Recovery.com and Psychology Today listings are high-intent directories — prioritize these over generic display advertising
 
 REVENUE & OCCUPANCY CONTEXT:
-- 20 total beds across two locations (10 Scottsdale, 10 Glendale)
-- Current occupancy: Scottsdale 8/10 (80%), Glendale 3/10 (30%) — Glendale is the critical gap
+- 20 total beds across two locations (10 Scottsdale, 10 Glendale) plus Indian School PHP/IOP
+- ALWAYS use live Kipu census data for current occupancy — never hardcode bed counts
 - Average LOS (length of stay): typically 30-60 days residential
 - Every empty bed is direct revenue loss
 - One qualified admission can be worth $30,000-$90,000+ depending on LOS and insurance reimbursement
@@ -231,39 +231,59 @@ export async function POST(req: Request) {
     if (agentId === '01') {
       // Use server-side data, fall back to client context
       const p = serverData?.performance || context?.performance
+      const p30 = serverData?.performance30 || context?.performance30
       const census = serverData?.census || context?.census
       const ctm = serverData?.ctmQuality || context?.ctm
+      const ctmSum = serverData?.ctmSummary || context?.ctmSummary
       const hubspot = serverData?.hubspot || context?.hubspot
       const cq = serverData?.campaignQuality || context?.campaignQuality
       const campHist = serverData?.campaignHistory || context?.campaignHistory
 
       const pSummary = p?.summary || p
+      const p30Summary = p30?.summary || p30
       const churchLoc = (census?.locations || census?.byLocation || [])
         .find((l: any) => l.name?.toLowerCase().includes('church'))
       const frierLoc = (census?.locations || census?.byLocation || [])
         .find((l: any) => l.name?.toLowerCase().includes('frier'))
+      const indianLoc = (census?.locations || census?.byLocation || [])
+        .find((l: any) => l.name?.toLowerCase().includes('indian'))
 
       const ctmSummary = ctm?.summary || ctm
       const sd = ctmSummary?.score_distribution || {}
+
+      // Speed-to-lead from CTM summary
+      const stl = ctmSum?.speed_to_lead || {}
+      const stlLine = stl.avg_response_time_minutes != null
+        ? `- Speed-to-lead: ${stl.avg_response_time_minutes} min avg (target: ${stl.target_minutes || 5} min)\n`
+        : '- Speed-to-lead: not yet measured (target: 5 min)\n'
 
       contextBlock = `
 
 LIVE DRC DASHBOARD DATA (server-side, SQLite-first):
 
-GOOGLE ADS (7d):
-- Spend: $${pSummary?.total_spend?.toFixed(0) ?? 'unknown'}
+GOOGLE ADS — 7-DAY PERFORMANCE:
+- Spend: $${pSummary?.total_spend?.toFixed(2) ?? 'unknown'}
 - Clicks: ${pSummary?.total_clicks ?? 'unknown'}
 - CPC: $${pSummary?.avg_cpc?.toFixed(2) ?? 'unknown'}
-- CPL: $${pSummary?.cost_per_conversion?.toFixed(0) ?? 'unknown'} (target: $150)
+- CPL: $${pSummary?.cost_per_conversion?.toFixed(2) ?? 'unknown'} (target: $150)
 - Conversions: ${Math.round(pSummary?.total_conversions || 0)}
-- CTR: ${pSummary?.avg_ctr?.toFixed(1) ?? 'unknown'}%
+- CTR: ${pSummary?.avg_ctr?.toFixed(2) ?? 'unknown'}%
+
+GOOGLE ADS — 30-DAY PERFORMANCE:
+- Spend: $${p30Summary?.total_spend?.toFixed(2) ?? 'unknown'}
+- Clicks: ${p30Summary?.total_clicks ?? 'unknown'}
+- CPC: $${p30Summary?.avg_cpc?.toFixed(2) ?? 'unknown'}
+- CPL: $${p30Summary?.cost_per_conversion?.toFixed(2) ?? 'unknown'}
+- Conversions: ${Math.round(p30Summary?.total_conversions || 0)}
+- CTR: ${p30Summary?.avg_ctr?.toFixed(2) ?? 'unknown'}%
 
 CTM CALL QUALITY (30d):
 - Total calls: ${ctmSummary?.total_calls ?? 'unknown'}
 - Qualification rate: ${ctmSummary?.qualification_rate ?? 'unknown'}%
 - 5-star qualified: ${sd['5'] ?? 0}
 - 4-star potential: ${sd['4'] ?? 0}
-- Qualified leads: ${ctmSummary?.qualified_leads ?? 'unknown'}`
+- Qualified leads: ${ctmSummary?.qualified_leads ?? 'unknown'}
+${stlLine}`
 
       if (cq?.campaigns) {
         const withCPL = cq.campaigns.filter((c: any) => c.qualified_cpl != null)
@@ -278,10 +298,11 @@ CTM CALL QUALITY (30d):
 
       contextBlock += `
 
-CENSUS (Kipu):
-- Church RTC (Scottsdale, female): ${churchLoc?.occupied ?? churchLoc?.census ?? '?'}/${churchLoc?.beds ?? '10'} beds
-- Frier RTC (Glendale, male): ${frierLoc?.occupied ?? frierLoc?.census ?? '?'}/${frierLoc?.beds ?? '10'} beds
-- Occupancy: ${census?.occupancyPct ?? '?'}%
+CENSUS (Kipu live):
+- Church RTC (Scottsdale, female): ${churchLoc?.occupied ?? '?'}/${churchLoc?.beds ?? '?'} beds (${churchLoc?.available ?? '?'} available)
+- Frier RTC (Glendale, male): ${frierLoc?.occupied ?? '?'}/${frierLoc?.beds ?? '?'} beds (${frierLoc?.available ?? '?'} available)
+- Indian School (PHP/IOP): ${indianLoc?.occupied ?? census?.indianSchool ?? '?'} patients
+- Total census: ${census?.totalCensus ?? '?'} | Occupancy: ${census?.occupancyPct ?? '?'}%
 
 HUBSPOT PIPELINE:
 - Total deals: ${hubspot?.deals_count ?? hubspot?.total_deals ?? 0}

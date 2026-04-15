@@ -18,23 +18,27 @@ interface SourceDef {
 }
 
 const SQLITE_SOURCES: Record<string, SourceDef> = {
-  adsPerf:         { source: 'GOOGLE_ADS', endpoint: 'performance_7', label: 'GoogleAds' },
+  adsPerf:         { source: 'GOOGLE_ADS', endpoint: 'performance_7', label: 'GoogleAds7d' },
+  adsPerf30:       { source: 'GOOGLE_ADS', endpoint: 'performance',   label: 'GoogleAds30d' },
   ctmQuality:      { source: 'ctm',        endpoint: 'quality-30d',   label: 'CTM' },
   campaignQuality: { source: 'ctm',        endpoint: 'campaign-quality-30d', label: 'CampaignQuality' },
   campaignHistory: { source: 'GOOGLE_ADS', endpoint: 'campaign_history', label: 'CampaignHistory' },
   hubspot:         { source: 'HUBSPOT',    endpoint: 'pipeline',      label: 'HubSpot' },
   kipu:            { source: 'KIPU',       endpoint: 'census',        label: 'Kipu' },
   qualifiedLeadsDeep: { source: 'ctm',  endpoint: 'qualified-leads-deep-30d', label: 'QualifiedLeadsDeep' },
+  ctmSummary:      { source: 'CTM',        endpoint: 'summary',       label: 'CTMSummary' },
 }
 
 const API_ENDPOINTS: Record<string, string> = {
   adsPerf:         '/api/google-ads/performance?days=7',
+  adsPerf30:       '/api/google-ads/performance?days=30',
   ctmQuality:      '/api/ctm/quality-report?days=30',
   campaignQuality: '/api/ctm/campaign-quality?days=30',
   campaignHistory: '/api/google-ads/campaign-history',
   hubspot:         '/api/hubspot/pipeline',
   kipu:            '/api/kipu/census',
   qualifiedLeadsDeep: '/api/ctm/qualified-leads-deep?days=30',
+  ctmSummary:      '/api/ctm/summary',
 }
 
 let _token: string | null = null
@@ -137,7 +141,9 @@ export async function getContext(agentId?: string) {
 
   return {
     performance: data.adsPerf || null,
+    performance30: data.adsPerf30 || null,
     ctmQuality: data.ctmQuality || null,
+    ctmSummary: data.ctmSummary || null,
     campaignQuality: data.campaignQuality || null,
     campaignHistory: data.campaignHistory || null,
     hubspot: data.hubspot || null,
