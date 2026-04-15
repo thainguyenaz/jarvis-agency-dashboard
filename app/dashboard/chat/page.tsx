@@ -447,7 +447,7 @@ function AgentChatContent() {
       </div>
 
       {/* MOBILE — Full screen chat view */}
-      <div className={`md:hidden flex-col w-full
+      <div className={`md:hidden flex-col w-full overflow-x-hidden
                       ${mobileView === 'chat' ? 'flex' : 'hidden'}`}>
         <div className="p-2 border-b border-jarvis-border bg-jarvis-surface
                         flex items-center gap-2 flex-shrink-0 min-w-0">
@@ -457,8 +457,8 @@ function AgentChatContent() {
           >
             ←
           </button>
-          <div className="flex-1 min-w-0">
-            <div className="font-mono font-bold text-jarvis-cyan text-xs truncate">
+          <div className="flex-1 min-w-0 overflow-hidden">
+            <div className="font-mono font-bold text-jarvis-cyan text-xs truncate max-w-[50vw]">
               {selectedAgent.id} — {selectedAgent.name.toUpperCase()}
             </div>
             <div className="text-xs font-mono mt-0.5">
@@ -493,7 +493,7 @@ function AgentChatContent() {
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto overflow-x-hidden p-3 space-y-3 min-h-0">
+        <div className="flex-1 overflow-y-auto overflow-x-hidden px-4 py-3 space-y-3 min-h-0">
           {messages.length === 0 && (
             <div className="flex flex-col items-center justify-center h-full text-center">
               <div className="text-4xl mb-4">🤖</div>
@@ -506,7 +506,7 @@ function AgentChatContent() {
             <div key={msg.id || i} className={`flex ${
               msg.role === 'user' ? 'justify-end' : 'justify-start'
             }`}>
-              <div className={`max-w-[85vw] rounded-lg text-sm font-mono px-3 py-2 overflow-hidden ${
+              <div style={{ overflowWrap: 'break-word' }} className={`max-w-[88vw] rounded-lg text-sm font-mono px-3 py-2 overflow-hidden break-words ${
                 msg.role === 'user'
                   ? 'bg-jarvis-cyan bg-opacity-10 text-jarvis-cyan border border-jarvis-cyan border-opacity-20'
                   : 'bg-jarvis-surface border border-jarvis-border text-jarvis-text'
@@ -555,8 +555,8 @@ function AgentChatContent() {
             <button
               onClick={sendMessage}
               disabled={loading || !input.trim()}
-              className="bg-jarvis-cyan text-jarvis-bg px-3 py-2 rounded-lg
-                         font-mono text-sm font-bold disabled:opacity-50 flex-shrink-0"
+              className="bg-jarvis-cyan text-jarvis-bg px-4 py-2 rounded-lg
+                         font-mono text-sm font-bold disabled:opacity-50 flex-shrink-0 min-w-[44px]"
             >
               ▶
             </button>

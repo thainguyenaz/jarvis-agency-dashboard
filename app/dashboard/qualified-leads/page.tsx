@@ -37,12 +37,24 @@ interface QualifiedHistory {
 export default function QualifiedLeadsPage() {
   const [data, setData] = useState<QualifiedHistory | null>(null)
   const [loading, setLoading] = useState(true)
+  const [loadSource, setLoadSource] = useState<string>('')
+  const [cacheAge, setCacheAge] = useState<number | null>(null)
   const [activeTab, setActiveTab] = useState<'sources'|'trend'|'calls'>('sources')
 
   useEffect(() => {
     const t = localStorage.getItem('jarvis_token') || ''
+    setLoadSource('Loading from cache...')
     jarvisFetch('/api/ctm/qualified-history?months=12', t)
-      .then(setData)
+      .then((result: any) => {
+        setData(result)
+        if (result._cached) {
+          setLoadSource('Loaded from SQLite cache')
+          setCacheAge(result._ageMinutes ?? null)
+        } else {
+          setLoadSource('Loaded from live CTM API')
+          setCacheAge(0)
+        }
+      })
       .catch(console.error)
       .finally(() => setLoading(false))
   }, [])
@@ -50,7 +62,7 @@ export default function QualifiedLeadsPage() {
   if (loading) return (
     <div className="flex items-center justify-center h-64">
       <div className="text-jarvis-cyan font-mono animate-pulse">
-        LOADING 12-MONTH QUALIFIED LEAD HISTORY...
+        {loadSource || 'LOADING QUALIFIED LEAD HISTORY...'}
       </div>
     </div>
   )
@@ -75,19 +87,32 @@ export default function QualifiedLeadsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-mono font-bold text-jarvis-cyan tracking-widest">
+          <h1 className="text-lg md:text-2xl font-mono font-bold text-jarvis-cyan tracking-widest">
             QUALIFIED LEAD INTELLIGENCE
           </h1>
           <div className="text-xs font-mono text-jarvis-dim mt-1">
             12-month analysis · {data.date_range?.start} to {data.date_range?.end} ·
             CTM star rating system
           </div>
+          <div className="text-xs font-mono mt-1">
+            {cacheAge !== null && (
+              <span className={cacheAge < 240 ? 'text-jarvis-green' : 'text-jarvis-yellow'}>
+                Last updated: {cacheAge < 1 ? 'just now' : cacheAge < 60 ? `${cacheAge}m ago` : `${Math.round(cacheAge / 60)}h ago`}
+                {(data as any)?._cached ? ' (cached)' : ' (live)'}
+              </span>
+            )}
+          </div>
         </div>
         <button
           onClick={() => {
             setLoading(true)
+            setLoadSource('Fetching live data from CTM API...')
             jarvisFetch('/api/ctm/qualified-history?months=12&refresh=true')
-              .then(setData).finally(() => setLoading(false))
+              .then((result: any) => {
+                setData(result)
+                setCacheAge(0)
+                setLoadSource('Loaded from live CTM API')
+              }).finally(() => setLoading(false))
           }}
           className="px-4 py-2 bg-jarvis-surface border border-jarvis-cyan
                      text-jarvis-cyan font-mono text-xs hover:bg-jarvis-cyan

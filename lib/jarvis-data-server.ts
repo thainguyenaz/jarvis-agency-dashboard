@@ -24,6 +24,7 @@ const SQLITE_SOURCES: Record<string, SourceDef> = {
   campaignHistory: { source: 'GOOGLE_ADS', endpoint: 'campaign_history', label: 'CampaignHistory' },
   hubspot:         { source: 'HUBSPOT',    endpoint: 'pipeline',      label: 'HubSpot' },
   kipu:            { source: 'KIPU',       endpoint: 'census',        label: 'Kipu' },
+  qualifiedLeadsDeep: { source: 'ctm',  endpoint: 'qualified-leads-deep-30d', label: 'QualifiedLeadsDeep' },
 }
 
 const API_ENDPOINTS: Record<string, string> = {
@@ -33,6 +34,7 @@ const API_ENDPOINTS: Record<string, string> = {
   campaignHistory: '/api/google-ads/campaign-history',
   hubspot:         '/api/hubspot/pipeline',
   kipu:            '/api/kipu/census',
+  qualifiedLeadsDeep: '/api/ctm/qualified-leads-deep?days=30',
 }
 
 let _token: string | null = null
@@ -134,6 +136,7 @@ export async function getContext(agentId?: string) {
     campaignHistory: data.campaignHistory || null,
     hubspot: data.hubspot || null,
     census: data.kipu || null,
+    qualifiedLeadsDeep: data.qualifiedLeadsDeep || null,
     sources,
   }
 }

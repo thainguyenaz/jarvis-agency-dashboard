@@ -293,7 +293,7 @@ HUBSPOT PIPELINE:
       }
 
       // Inject deep qualified leads data
-      const qlDeep01 = context?.qualifiedLeadsDeep
+      const qlDeep01 = serverData?.qualifiedLeadsDeep || context?.qualifiedLeadsDeep
       if (qlDeep01?.summary) {
         const qs = qlDeep01.summary
         contextBlock += `\n\nTRUE QUALIFIED LEADS (4-5 star, 2+ min calls, last 30 days):\n`
@@ -364,6 +364,29 @@ RECOMMENDATION FRAMEWORK:
 - When recommending pauses, budget shifts, or bid changes, cite the exact campaign name and metric
 - Free channels (GBP, Organic) should be evaluated on qualified-lead output, not just call volume`
 
+      // Inject per-campaign performance data
+      const campaigns = p?.campaigns
+      if (campaigns && Array.isArray(campaigns)) {
+        // Aggregate daily rows by campaign name
+        const byName: Record<string, { spend: number; clicks: number; impressions: number; conversions: number; status: number }> = {}
+        campaigns.forEach((c: any) => {
+          const name = c.campaignName || c.campaign_name || 'Unknown'
+          if (!byName[name]) byName[name] = { spend: 0, clicks: 0, impressions: 0, conversions: 0, status: c.status }
+          byName[name].spend += c.spend || 0
+          byName[name].clicks += c.clicks || 0
+          byName[name].impressions += c.impressions || 0
+          byName[name].conversions += c.conversions || 0
+        })
+        contextBlock += `\n\nCAMPAIGN PERFORMANCE (${rangeLabel}):`
+        Object.entries(byName)
+          .sort((a, b) => b[1].spend - a[1].spend)
+          .forEach(([name, d]) => {
+            const cpc = d.clicks > 0 ? (d.spend / d.clicks).toFixed(2) : 'N/A'
+            const cpl = d.conversions > 0 ? (d.spend / d.conversions).toFixed(2) : 'NONE'
+            contextBlock += `\n- ${name}: $${d.spend.toFixed(2)} spend, ${d.clicks} clicks, CPC $${cpc}, ${d.conversions} conv, CPL $${cpl}`
+          })
+      }
+
       // CTM quality from server data
       const cq = serverData?.campaignQuality || context?.campaignQuality
       const ctmQ = serverData?.ctmQuality || context?.ctmQuality
@@ -401,8 +424,8 @@ RECOMMENDATION FRAMEWORK:
         })
       }
 
-      // Inject deep qualified leads data
-      const qlDeep07 = context?.qualifiedLeadsDeep
+      // Inject deep qualified leads data — server-side primary, client fallback
+      const qlDeep07 = serverData?.qualifiedLeadsDeep || context?.qualifiedLeadsDeep
       if (qlDeep07?.summary) {
         const qs = qlDeep07.summary
         contextBlock += `\nTRUE QUALIFIED LEADS (4-5 star, 2+ min calls, last 30 days):\n`
