@@ -139,7 +139,18 @@ export default function DashboardLayout({
           )}
         </nav>
 
-        <div className="p-4 border-t border-jarvis-border">
+        <div className="p-4 border-t border-jarvis-border space-y-1">
+          <Link
+            href="/dashboard/change-password"
+            className={`block text-jarvis-dim hover:text-jarvis-cyan font-mono text-xs
+                       py-2 transition-all ${
+                         pathname === '/dashboard/change-password'
+                           ? 'text-jarvis-cyan'
+                           : ''
+                       }`}
+          >
+            🔑 CHANGE PASSWORD
+          </Link>
           <button
             onClick={handleLogout}
             className="w-full text-jarvis-dim hover:text-jarvis-red font-mono text-xs

@@ -68,11 +68,17 @@ function readSQLiteCache(): Record<string, CacheResult> | null {
     for (const [key, def] of Object.entries(SQLITE_SOURCES)) {
       const row = db.prepare(
         'SELECT data, fetched_at FROM sync_cache WHERE source = ? AND endpoint = ? LIMIT 1'
-      ).get(def.source, def.endpoint) as { data: string; fetched_at: number } | undefined
+      ).get(def.source, def.endpoint) as { data: string; fetched_at: number | string } | undefined
 
-      if (row && row.fetched_at > cutoff) {
-        const ageH = ((Date.now() - row.fetched_at) / 3600000).toFixed(1)
-        results[key] = { value: JSON.parse(row.data), src: `SQLite(${ageH}h)`, label: def.label }
+      if (row) {
+        // Handle both ISO string and legacy epoch integer
+        const fetchedMs = typeof row.fetched_at === 'string'
+          ? new Date(row.fetched_at).getTime()
+          : row.fetched_at
+        if (fetchedMs > cutoff) {
+          const ageH = ((Date.now() - fetchedMs) / 3600000).toFixed(1)
+          results[key] = { value: JSON.parse(row.data), src: `SQLite(${ageH}h)`, label: def.label }
+        }
       }
     }
 
