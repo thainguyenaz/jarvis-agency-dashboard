@@ -214,3 +214,28 @@ Build as exact match only:
 After every push to jarvis-agency-dashboard, confirm deploy at:
 https://vercel.com/thainguyenazs-projects/jarvis-agency-dashboard
 Expected: Ready in ~29 seconds
+
+---
+
+## CTM CACHE ARCHITECTURE (fixed April 14, 2026)
+
+### Nightly Sync Schedule (runs 2am AZ via nightly-sync.js)
+- ctm/qualified-history-12m — 24hr TTL (heavy 12-month pull — MUST be in nightly sync)
+- ctm/quality-30d — 4hr TTL
+- ctm/campaign-quality-30d — 4hr TTL
+- All other CTM endpoints — 4hr TTL
+
+### Stale-While-Revalidate Pattern
+- When cache expires: return stale data immediately, trigger background refresh
+- Never block the user waiting for live CTM API
+- Only blocks on cold cache (first-ever load after server restart)
+- Cold cache load time: 2-5 minutes (unavoidable — CTM API is slow)
+
+### Performance Targets
+- Cache warm: under 0.2 seconds
+- Cache expired: under 0.2 seconds (stale served + background refresh)
+- Cold cache: 2-5 minutes (acceptable — only happens once)
+
+### Freshness Metadata
+Every CTM response includes: _fetchedAt, _ageMinutes, _cached
+UI displays "Last updated: X minutes ago (cached)" in green/yellow
