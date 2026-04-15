@@ -9,28 +9,20 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        'jarvis-bg': '#0f1218',
-        'jarvis-surface': '#181d28',
-        'jarvis-border': '#252d3a',
-        'jarvis-cyan': '#8bb4cc',
-        'jarvis-green': '#6bc993',
-        'jarvis-red': '#d97070',
-        'jarvis-yellow': '#d4a84b',
-        'jarvis-purple': '#9b7ed8',
-        'jarvis-text': '#dcd8d2',
-        'jarvis-dim': '#6b7280',
+        'jarvis-bg': '#0a0e1a',
+        'jarvis-surface': '#111827',
+        'jarvis-border': '#1e293b',
+        'jarvis-cyan': '#00e5ff',
+        'jarvis-green': '#00ff88',
+        'jarvis-red': '#ff4444',
+        'jarvis-yellow': '#ffd700',
+        'jarvis-purple': '#7c3aed',
+        'jarvis-text': '#e2e8f0',
+        'jarvis-dim': '#64748b',
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
         mono: ['JetBrains Mono', 'Fira Code', 'monospace'],
-      },
-      borderRadius: {
-        'card': '12px',
-      },
-      boxShadow: {
-        'card': '0 1px 3px rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.2)',
-        'card-hover': '0 4px 12px rgba(0,0,0,0.4)',
-      },
+      }
     },
   },
   plugins: [],
