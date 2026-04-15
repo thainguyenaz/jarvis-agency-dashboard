@@ -449,22 +449,22 @@ function AgentChatContent() {
       {/* MOBILE — Full screen chat view */}
       <div className={`md:hidden flex-col w-full
                       ${mobileView === 'chat' ? 'flex' : 'hidden'}`}>
-        <div className="p-3 border-b border-jarvis-border bg-jarvis-surface
-                        flex items-center gap-3 flex-shrink-0">
+        <div className="p-2 border-b border-jarvis-border bg-jarvis-surface
+                        flex items-center gap-2 flex-shrink-0 min-w-0">
           <button
             onClick={() => setMobileView('history')}
-            className="text-jarvis-cyan font-mono text-sm px-2 py-1"
+            className="text-jarvis-cyan font-mono text-xs px-1 py-1 flex-shrink-0"
           >
-            ← CHATS
+            ←
           </button>
-          <div className="flex-1">
-            <div className="font-mono font-bold text-jarvis-cyan text-sm">
-              AGENT {selectedAgent.id} — {selectedAgent.name.toUpperCase()}
+          <div className="flex-1 min-w-0">
+            <div className="font-mono font-bold text-jarvis-cyan text-xs truncate">
+              {selectedAgent.id} — {selectedAgent.name.toUpperCase()}
             </div>
             <div className="text-xs font-mono mt-0.5">
               {liveContext
-                ? <span className="text-jarvis-green">● Live data connected</span>
-                : <span className="text-jarvis-dim">○ Loading data...</span>
+                ? <span className="text-jarvis-green">●</span>
+                : <span className="text-jarvis-dim">○</span>
               }
             </div>
           </div>
@@ -472,7 +472,7 @@ function AgentChatContent() {
             <button
               onClick={sendEmailReport}
               disabled={emailStatus === 'sending'}
-              className={`text-xs font-mono px-1 ${
+              className={`text-sm flex-shrink-0 ${
                 emailStatus === 'sent' ? 'text-jarvis-green'
                   : emailStatus === 'error' ? 'text-jarvis-red'
                   : 'text-jarvis-dim'
@@ -487,13 +487,13 @@ function AgentChatContent() {
               'agent-chat',
               'width=900,height=750'
             )}
-            className="text-jarvis-dim text-xs font-mono"
+            className="text-jarvis-dim text-sm flex-shrink-0"
           >
             ⤢
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-0">
+        <div className="flex-1 overflow-y-auto overflow-x-hidden p-3 space-y-3 min-h-0">
           {messages.length === 0 && (
             <div className="flex flex-col items-center justify-center h-full text-center">
               <div className="text-4xl mb-4">🤖</div>
@@ -506,18 +506,18 @@ function AgentChatContent() {
             <div key={msg.id || i} className={`flex ${
               msg.role === 'user' ? 'justify-end' : 'justify-start'
             }`}>
-              <div className={`max-w-[85%] rounded-lg text-sm font-mono px-4 py-3 ${
+              <div className={`max-w-[85vw] rounded-lg text-sm font-mono px-3 py-2 overflow-hidden ${
                 msg.role === 'user'
                   ? 'bg-jarvis-cyan bg-opacity-10 text-jarvis-cyan border border-jarvis-cyan border-opacity-20'
                   : 'bg-jarvis-surface border border-jarvis-border text-jarvis-text'
               }`}>
                 <div className="text-xs opacity-50 mb-1">
-                  {msg.role === 'user' ? 'THAI' : `🤖 AGENT ${selectedAgent.id}`}
+                  {msg.role === 'user' ? 'YOU' : `🤖 ${selectedAgent.id}`}
                   {msg.created_at && (
                     <span className="ml-2">{formatDate(msg.created_at)}</span>
                   )}
                 </div>
-                <div className="whitespace-pre-wrap leading-relaxed">
+                <div className="whitespace-pre-wrap leading-relaxed break-words">
                   {msg.content}
                 </div>
               </div>
@@ -526,7 +526,7 @@ function AgentChatContent() {
           {loading && (
             <div className="flex justify-start">
               <div className="bg-jarvis-surface border border-jarvis-border
-                             px-4 py-3 rounded-lg text-sm font-mono
+                             px-3 py-2 rounded-lg text-sm font-mono
                              text-jarvis-dim animate-pulse">
                 Agent {selectedAgent.id} thinking...
               </div>
@@ -535,7 +535,7 @@ function AgentChatContent() {
           <div ref={messagesEndRef} />
         </div>
 
-        <div className="p-3 border-t border-jarvis-border bg-jarvis-surface flex-shrink-0">
+        <div className="p-2 border-t border-jarvis-border bg-jarvis-surface flex-shrink-0">
           <div className="flex gap-2 items-end">
             <textarea
               value={input}
@@ -546,19 +546,19 @@ function AgentChatContent() {
                   sendMessage()
                 }
               }}
-              placeholder={contextLoading ? 'Loading live data...' : `Message ${selectedAgent.name}...`}
+              placeholder={contextLoading ? 'Loading...' : `Message...`}
               rows={2}
-              className="flex-1 bg-jarvis-bg border border-jarvis-border rounded-lg
+              className="flex-1 min-w-0 bg-jarvis-bg border border-jarvis-border rounded-lg
                          px-3 py-2 text-jarvis-text font-mono text-sm
                          focus:outline-none focus:border-jarvis-cyan resize-none"
             />
             <button
               onClick={sendMessage}
               disabled={loading || !input.trim()}
-              className="bg-jarvis-cyan text-jarvis-bg px-4 py-3 rounded-lg
-                         font-mono text-sm font-bold disabled:opacity-50"
+              className="bg-jarvis-cyan text-jarvis-bg px-3 py-2 rounded-lg
+                         font-mono text-sm font-bold disabled:opacity-50 flex-shrink-0"
             >
-              SEND
+              ▶
             </button>
           </div>
         </div>
@@ -687,7 +687,7 @@ function AgentChatContent() {
             )}
             {messages.map((msg, i) => (
               <div key={msg.id || i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                <div className={`max-w-2xl rounded-lg text-sm font-mono ${
+                <div className={`max-w-2xl rounded-lg text-sm font-mono overflow-hidden ${
                   msg.role === 'user'
                     ? 'bg-jarvis-cyan bg-opacity-10 text-jarvis-cyan border border-jarvis-cyan border-opacity-20 px-4 py-3'
                     : 'bg-jarvis-surface border border-jarvis-border text-jarvis-text px-4 py-3'
@@ -696,7 +696,7 @@ function AgentChatContent() {
                     <div className="text-xs opacity-50">{msg.role === 'user' ? 'THAI' : `🤖 AGENT ${selectedAgent.id}`}</div>
                     {msg.created_at && <div className="text-xs opacity-40">{formatDate(msg.created_at)}</div>}
                   </div>
-                  <div className="whitespace-pre-wrap leading-relaxed">{msg.content}</div>
+                  <div className="whitespace-pre-wrap leading-relaxed break-words">{msg.content}</div>
                 </div>
               </div>
             ))}

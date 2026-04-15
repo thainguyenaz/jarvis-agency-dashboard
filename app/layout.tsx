@@ -13,7 +13,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="bg-jarvis-bg text-jarvis-text min-h-screen">
+      <body className="bg-jarvis-bg text-jarvis-text min-h-screen overflow-x-hidden">
         {children}
       </body>
     </html>

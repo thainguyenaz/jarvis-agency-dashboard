@@ -105,7 +105,7 @@ export default function GoogleAdsPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold font-mono text-jarvis-cyan tracking-widest">
+        <h1 className="text-lg md:text-2xl font-bold font-mono text-jarvis-cyan tracking-widest">
           GOOGLE ADS ANALYSIS
         </h1>
         <button
@@ -120,7 +120,7 @@ export default function GoogleAdsPage() {
 
       {/* Performance KPIs */}
       {performance && (
-        <div className="grid grid-cols-5 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
           {[
             { label: 'TOTAL SPEND', value: `$${((summary?.total_spend || 0)/1000).toFixed(1)}K`,
               status: 'neutral' },
@@ -157,7 +157,7 @@ export default function GoogleAdsPage() {
         <div className="text-jarvis-yellow font-mono text-sm font-bold mb-2">
           ⚠️ GOOGLE ADS GUARDRAILS ACTIVE
         </div>
-        <div className="grid grid-cols-3 gap-4 text-sm font-mono text-jarvis-dim">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-2 md:gap-4 text-sm font-mono text-jarvis-dim">
           <div>• Max 2 changes per campaign per week</div>
           <div>• Max bid adjustment: 20% (safe: 15%)</div>
           <div>• Budget changes require approval if &gt;30%</div>

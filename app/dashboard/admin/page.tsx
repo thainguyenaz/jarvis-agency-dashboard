@@ -74,8 +74,8 @@ export default function AdminPage() {
       )}
 
       {!loading && !error && (
-        <div className="border border-jarvis-border rounded-lg overflow-hidden">
-          <table className="w-full text-sm font-mono">
+        <div className="border border-jarvis-border rounded-lg overflow-x-auto">
+          <table className="w-full text-sm font-mono min-w-[600px]">
             <thead>
               <tr className="bg-jarvis-surface border-b border-jarvis-border">
                 <th className="text-left px-4 py-3 text-jarvis-dim text-xs tracking-wider">NAME</th>

@@ -119,7 +119,7 @@ export default function CensusPage() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold font-mono text-jarvis-cyan tracking-widest">
+        <h1 className="text-lg md:text-2xl font-bold font-mono text-jarvis-cyan tracking-widest">
           KIPU CENSUS — BED BOARD
         </h1>
         <div className="text-jarvis-dim text-xs font-mono">
@@ -137,7 +137,7 @@ export default function CensusPage() {
         </div>
 
         {/* RTC Summary row */}
-        <div className="grid grid-cols-3 gap-4 mb-5">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4 mb-5">
           <div className={`border rounded-lg p-4 ${borderColor(rtcPct)}`}>
             <div className="text-xs font-mono text-jarvis-dim mb-1">TOTAL RTC OCCUPANCY</div>
             <div className={`text-4xl font-bold font-mono ${statusColor(rtcPct)}`}>
@@ -224,7 +224,7 @@ export default function CensusPage() {
         <div className="text-jarvis-dim text-xs font-mono mb-4 opacity-60">
           4160 N 108th Ave · Headcount only · No bed capacity limit
         </div>
-        <div className="grid grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {[
             { label: 'PHP', name: 'Partial Hospitalization', count: phpDisplay, live: true },
             { label: 'IOP', name: 'Intensive Outpatient', count: iopCount, live: false },

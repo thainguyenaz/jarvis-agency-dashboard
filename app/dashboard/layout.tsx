@@ -51,16 +51,18 @@ export default function DashboardLayout({
   return (
     <div className="min-h-screen bg-jarvis-bg">
       {/* Mobile top nav */}
-      <div className="md:hidden flex items-center justify-between p-4 border-b border-jarvis-border bg-jarvis-surface">
-        <div className="flex items-center gap-2">
-          <div className="text-jarvis-cyan font-mono font-bold text-sm">
-            🤖 JARVIS
+      <div className="md:hidden flex items-center justify-between px-3 py-2 border-b border-jarvis-border bg-jarvis-surface gap-2">
+        <div className="flex items-center gap-1.5 flex-shrink-0">
+          <div className="text-jarvis-cyan font-mono font-bold text-xs">
+            🤖
           </div>
           {displayName && (
-            <div className="text-jarvis-green font-mono text-xs">● {displayName.split(' ')[0]}</div>
+            <div className="text-jarvis-green font-mono text-xs truncate max-w-[60px]">
+              {displayName.split(' ')[0]}
+            </div>
           )}
         </div>
-        <div className="flex gap-3 overflow-x-auto items-center">
+        <div className="flex gap-1.5 overflow-x-auto items-center flex-1 min-w-0 scrollbar-none">
           {[
             { href: '/dashboard', label: '📊' },
             { href: '/dashboard/google-ads', label: '🎯' },
@@ -76,13 +78,15 @@ export default function DashboardLayout({
             <Link
               key={item.href}
               href={item.href}
-              className="text-jarvis-dim hover:text-jarvis-cyan text-xl px-1"
+              className={`flex-shrink-0 text-lg px-0.5 ${
+                pathname === item.href ? 'text-jarvis-cyan' : 'text-jarvis-dim'
+              }`}
             >
               {item.label}
             </Link>
           ))}
-          <button onClick={handleLogout} className="text-jarvis-dim hover:text-jarvis-red text-sm ml-1">⏻</button>
         </div>
+        <button onClick={handleLogout} className="text-jarvis-dim hover:text-jarvis-red text-sm flex-shrink-0 ml-1">⏻</button>
       </div>
 
       <div className="flex">
@@ -147,8 +151,8 @@ export default function DashboardLayout({
       </aside>
 
       {/* Main content */}
-      <main className="flex-1 overflow-auto w-full">
-        <div className="p-6">
+      <main className="flex-1 overflow-x-hidden overflow-y-auto w-full min-w-0">
+        <div className="p-3 md:p-6">
           {children}
         </div>
       </main>

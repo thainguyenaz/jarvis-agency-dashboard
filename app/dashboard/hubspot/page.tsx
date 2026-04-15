@@ -42,9 +42,9 @@ export default function HubSpotPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold font-mono text-jarvis-cyan tracking-widest">HUBSPOT PIPELINE</h1>
+      <h1 className="text-lg md:text-2xl font-bold font-mono text-jarvis-cyan tracking-widest">HUBSPOT PIPELINE</h1>
 
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4">
         {[
           { label: 'TOTAL DEALS', value: pipeline.deals_count || 0, status: 'neutral' },
           { label: 'CLOSED WON', value: stages.closedwon?.count || 0, status: 'good' },

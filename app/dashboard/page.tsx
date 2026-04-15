@@ -124,25 +124,25 @@ export default function OverviewPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold font-mono text-jarvis-cyan tracking-widest">
+      <div className="flex items-center justify-between gap-2">
+        <h1 className="text-lg md:text-2xl font-bold font-mono text-jarvis-cyan tracking-widest">
           COMMAND OVERVIEW
         </h1>
-        <div className="text-jarvis-dim text-xs font-mono">
+        <div className="text-jarvis-dim text-xs font-mono flex-shrink-0 hidden sm:block">
           {new Date().toLocaleString('en-US', { timeZone: 'America/Phoenix' })} MST
         </div>
       </div>
 
       {/* KPI Grid */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
         {metrics.map((m, i) => (
           <div
             key={i}
-            className={`bg-jarvis-surface border rounded-lg p-4 ${statusColors[m.status]}`}
+            className={`bg-jarvis-surface border rounded-lg p-3 md:p-4 ${statusColors[m.status]}`}
           >
-            <div className="text-xs font-mono opacity-60 mb-1">{m.label}</div>
-            <div className="text-3xl font-bold font-mono">{m.value}</div>
-            {m.sub && <div className="text-xs font-mono opacity-50 mt-1">{m.sub}</div>}
+            <div className="text-xs font-mono opacity-60 mb-1 truncate">{m.label}</div>
+            <div className="text-xl md:text-3xl font-bold font-mono">{m.value}</div>
+            {m.sub && <div className="text-xs font-mono opacity-50 mt-1 truncate">{m.sub}</div>}
           </div>
         ))}
       </div>
@@ -152,7 +152,7 @@ export default function OverviewPage() {
         <h2 className="text-jarvis-cyan font-mono font-bold mb-4 tracking-wider">
           AGENT ROSTER — PHASE 1 (MONITOR ONLY)
         </h2>
-        <div className="grid grid-cols-4 gap-2">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
           {agents.map((agent: any) => (
             <div
               key={agent.id}

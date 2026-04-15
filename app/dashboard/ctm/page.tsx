@@ -28,9 +28,9 @@ export default function CTMPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold font-mono text-jarvis-cyan tracking-widest">CALL TRACKING — CTM</h1>
+      <h1 className="text-lg md:text-2xl font-bold font-mono text-jarvis-cyan tracking-widest">CALL TRACKING — CTM</h1>
 
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
         {[
           { label: 'TOTAL CALLS (30D)', value: data.total_calls_30d || '—', status: 'neutral' },
           { label: 'ANSWERED', value: data.total_answered || data.answered || '—', status: 'good' },

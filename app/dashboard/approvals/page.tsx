@@ -23,7 +23,7 @@ export default function ApprovalsPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold font-mono text-jarvis-cyan tracking-widest">PENDING APPROVALS</h1>
+      <h1 className="text-lg md:text-2xl font-bold font-mono text-jarvis-cyan tracking-widest">PENDING APPROVALS</h1>
 
       {approvals.length === 0 ? (
         <div className="bg-jarvis-surface border border-jarvis-border rounded-lg p-12 text-center">

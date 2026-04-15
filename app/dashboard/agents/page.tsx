@@ -52,7 +52,7 @@ export default function AgentsPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold font-mono text-jarvis-cyan tracking-widest">AGENT ROSTER</h1>
+        <h1 className="text-lg md:text-2xl font-bold font-mono text-jarvis-cyan tracking-widest">AGENT ROSTER</h1>
         <div className="text-jarvis-dim text-xs font-mono">
           PHASE 1 — MONITOR & ADVISE ONLY
         </div>
@@ -84,7 +84,7 @@ export default function AgentsPage() {
         </div>
       )}
 
-      <div className="grid grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {['active', 'monitor-only', 'phase-locked', 'idle'].map(status => {
           const count = agents.filter((a: any) =>
             a.status === status || a.status === `active-${status}`
@@ -98,8 +98,8 @@ export default function AgentsPage() {
         })}
       </div>
 
-      <div className="bg-jarvis-surface border border-jarvis-border rounded-lg overflow-hidden">
-        <table className="w-full text-xs font-mono">
+      <div className="bg-jarvis-surface border border-jarvis-border rounded-lg overflow-x-auto">
+        <table className="w-full text-xs font-mono min-w-[600px]">
           <thead>
             <tr className="border-b border-jarvis-border bg-jarvis-bg">
               <th className="text-left py-3 px-4 text-jarvis-dim">ID</th>
