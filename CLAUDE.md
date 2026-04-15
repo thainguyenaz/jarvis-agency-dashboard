@@ -179,3 +179,38 @@ Build as exact match only:
 - Google Ads change monitor: 9am daily
 - Health check: 8am daily
 - SQLite backup: 2am AZ daily → SharePoint auto-upload
+
+---
+
+## DEPLOYMENT ARCHITECTURE — CRITICAL RULES
+
+### Repo → Vercel Project Mapping (NEVER mix these up)
+- jarvis-agency-dashboard repo → Vercel project: jarvis-agency-dashboard (prj_wMnjlqcpKdGdGj1UkUjyvcpfHVXR)
+- jarvis-workspace/command-center → Vercel project: command-center (prj_g8i4CccsMTjx2XR3gudqAqCEjMPs) — IGNORED via ignoreCommand, do not use
+- jarvis-marketing-agency → pm2 only, NO Vercel deployment
+- jarvis-workspace/jarvis-api → pm2 only, NO Vercel deployment
+
+### Where Each File Lives
+- Dashboard frontend (Next.js): /home/openclaw/jarvis-agency-dashboard/
+- API backend (Express): /home/openclaw/jarvis-workspace/jarvis-api/
+- Agent runtime + crons: /home/openclaw/jarvis-marketing-agency/
+- Command center (deprecated): /home/openclaw/jarvis-workspace/command-center/ — DO NOT USE
+
+### Rules for Claude Code
+1. Frontend changes (UI, pages, components) → ALWAYS go in jarvis-agency-dashboard
+2. API route changes → ALWAYS go in jarvis-workspace/jarvis-api
+3. Agent/cron/Telegram changes → ALWAYS go in jarvis-marketing-agency
+4. NEVER commit frontend code to jarvis-workspace
+5. NEVER commit API routes to jarvis-agency-dashboard
+6. NEVER use localhost:3002 in jarvis-agency-dashboard — use http://93.188.166.239:3002
+7. command-center is deprecated — do not add features or fix bugs there
+
+### PM2 Process Map
+- id 1: jarvis-agents → /home/openclaw/jarvis-marketing-agency/index.js
+- id 2: jarvis-api → /home/openclaw/jarvis-workspace/jarvis-api/src/index.js
+- id 3: jarvis-marketing-agency → /home/openclaw/jarvis-marketing-agency/src/cmo-entry.js
+
+### Vercel Deploy Confirmation
+After every push to jarvis-agency-dashboard, confirm deploy at:
+https://vercel.com/thainguyenazs-projects/jarvis-agency-dashboard
+Expected: Ready in ~29 seconds
