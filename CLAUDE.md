@@ -36,3 +36,146 @@ Hardcoded into BEHAVIORAL_HEALTH_EXPERTISE in app/api/chat-agent/route.ts.
 - psychiatric evaluation and treatment Arizona
 - dual diagnosis psychiatrist Arizona
 - luxury psychiatric care Scottsdale
+
+---
+
+# JARVIS AGENCY DASHBOARD — HARDCODED DECISIONS LOG
+
+Last updated: April 13, 2026
+
+## MODEL
+- All agents use claude-opus-4-5-20251001
+- max_tokens: 4096
+- Never downgrade to Sonnet without Thai explicit approval
+
+## RESPONSE FORMAT RULES (enforced in all agent system prompts)
+- Always complete full response in ONE message — never truncate
+- Use clear headers with --- separators between sections
+- Use bullet points for lists, not paragraphs
+- Use specific numbers and data — never say 'unknown' if data is available
+- Be direct and detailed like a senior analyst
+- Every recommendation must cite data source (CTM, Google Ads API, Kipu, etc.)
+- Minimum 500 words for strategic questions with actual numbers
+
+## PRIMARY METRIC — NON-NEGOTIABLE
+The ONLY metric that matters is CTM 4-5 star qualified leads with call duration >= 120 seconds.
+- Google Ads "conversions" mean nothing without CTM quality confirmation
+- Any campaign with zero 4-5 star calls in 30 days = FAILING
+- Any campaign with qualified CPL > $1,500 = CRITICAL
+- Calls under 60 seconds = FAKE or WRONG NUMBER
+- Calls 60-120 seconds = BORDERLINE — treat as unqualified
+- Calls 120+ seconds with 4-5 stars = TRUE QUALIFIED LEADS
+- Every recommendation must tie back to: does this drive more 4-5 star calls over 2 minutes?
+
+## CTM DATA IN ALL AGENTS
+All 6 agents (01, 03, 07, 11, 18, 20) must receive:
+- CTM quality report (4-5 star distribution, qualification rate by source)
+- Qualified leads deep (2+ minute, 4-5 star filtered calls)
+- Campaign quality correlation (qualified CPL per campaign)
+
+## CURRENT BASELINE (established April 12, 2026)
+- True qualified leads: 51/month (4-5 star, 2+ min, answered)
+- True qualification rate: 8.6% (51 of 591 calls)
+- Avg qualified call duration: 6min 19sec
+- Paid qualified CPL: $2,500
+- Top sources by qualified leads:
+  - Google Ads: 20 leads at $2,500 CPL
+  - Google Organic: 10 leads at $0 CPL
+  - GBP Combined: 10 leads at $0 CPL
+  - Recovery.com: 7 leads at 54.5% qualification rate
+  - Direct/Unknown: 4 leads at $0 CPL
+- Target: 100 qualified leads/month by Day 90
+
+## DATA ARCHITECTURE
+- VPS: 93.188.166.239 (Hostinger Ubuntu)
+- All API calls from Vercel must use public VPS IP — never localhost
+- jarvis-data-server.ts VPS_BASE = 'http://93.188.166.239:3002'
+- SQLite first, API fallback for all data fetches
+- SQLite DB: /home/openclaw/data/jarvis-cache.db
+
+## USERS AND ACCESS (as of April 13, 2026)
+- thai / admin / full access + sees all conversations
+- jason / user / Jason Inserra / full agent access / private conversations
+- adam / user / Adam Leonard / full agent access / private conversations
+- blayne / user / Blayne Archer / full agent access / private conversations
+- Default user password: DRC2026! (users should change on first login)
+
+## NEGATIVE KEYWORDS — DATA VERIFIED (April 12, 2026)
+Add to Mental Health campaign:
+- therapist, therapists near me (zero conversions confirmed)
+- online counseling, over the phone counseling
+- anger management counseling
+- counselors [city] — mesa, chandler, tempe
+- substance abuse counselor
+- alcohol screening with a licensed counselor
+- forensic psychiatric evaluation
+- redemption psychiatry (competitor)
+- valley psychiatric hospital (competitor)
+- crossroads counseling scottsdale (competitor)
+
+DO NOT add as negatives (converting traffic confirmed):
+- mental hospital, mental hospital phoenix (9 convs, crisis intent)
+- inpatient psychiatric hospital (2 convs)
+- long term inpatient psychiatric care (1 conv)
+- psychiatrist (DRC hiring psychiatrist MD — keep)
+- addiction counseling (1 conv)
+- i need counseling now (1 conv)
+
+## VERIFIED KEYWORD OPPORTUNITIES (Google Keyword Planner confirmed)
+Build as exact match only:
+- [tricare rehab] — 110/mo, LOW competition
+- [tricare approved rehabs] — 90/mo, LOW competition
+- [dual diagnosis] — 4,900/mo, LOW competition
+- [dual diagnosis near me] — 210/mo
+- [executive rehab] — 210/mo, LOW competition
+- [private luxury rehab] — 90/mo, LOW competition
+- [luxury alcohol treatment] — 70/mo, LOW competition
+- [rehab for men near me] — 400/mo, Medium competition
+- [women's rehab near me] — 720/mo, Medium competition
+- [female rehab] — 720/mo, Medium competition
+
+## CONFIRMED WASTE — PAUSE IMMEDIATELY
+- 25 zero-conversion keywords: $10,755/month confirmed waste
+- Near Me ad groups: $4,310 for 1 conversion
+- Tablets + Connected TV: $521, zero conversions
+- Detox Treatment [STR]: $121,184 all-time, zero qualified leads — stay paused
+
+## BUDGET REALLOCATION PLAN (pending Thai approval for execution)
+- Mental Health [STR]: $20,551 → $14,000 (cut phrase match waste)
+- Addiction Treatment [STR]: $19,026 → $12,000 (same)
+- New Luxury Exact Match Campaign: $0 → $3,000 TEST
+- Glendale Occupancy Campaign (men's residential): $0 → $1,000 TEST
+- Tricare/Military Campaign: $0 → $500 TEST
+- PMax: $3,974 → $3,000 (hold, CTM signals live Apr 17)
+- Brand [STR]: $763 → $1,000
+- Recovery.com optimization: $0 → $2,000
+- GBP Optimization: $0 → $1,500
+- Detox [STR]: STAY PAUSED
+
+## CTM OFFLINE CONVERSION UPLOAD (built April 10, 2026)
+- Status: DRY RUN active — go-live April 17, 2026
+- Filters: 4-5 star calls, duration >= 120 seconds, answered only
+- Conversion action: "Quality Inbound Call" in Google Ads
+- Cron: 9:05 AM Arizona daily
+- To go live: change crontab to add --live flag
+- Deduplication: active — won't double-upload
+
+## STRIVENTA TRANSITION
+- Ghosted Friday April 11 deadline
+- Account ownership transfer email drafted — send Monday BEFORE termination
+- $121,184 Detox waste documented for termination letter
+- Google Ads Standard Access application submitted April 13, 2026
+
+## DAZOS MIGRATION (planned within 30 days)
+- Replacing HubSpot with Dazos CRM (behavioral health specific)
+- Dazos pre-integrated with Kipu EMR
+- Call Dazos: (888) 230-2120 — ask for API docs
+- HubSpot forms on website must be replaced before cutover
+- Jarvis HubSpot connector will need full rebuild for Dazos
+
+## WEEKLY MONITORING
+- CTM quality report: Monday 7am AZ via Telegram
+- CTM conversion upload: 9:05am daily
+- Google Ads change monitor: 9am daily
+- Health check: 8am daily
+- SQLite backup: 2am AZ daily → SharePoint auto-upload
