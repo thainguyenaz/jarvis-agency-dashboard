@@ -67,11 +67,8 @@ function AgentChatContent() {
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    try {
-      const user = JSON.parse(localStorage.getItem('jarvis_user') || '{}')
-      const name = user.full_name || user.fullName || user.username || 'YOU'
-      setDisplayName(name.toUpperCase())
-    } catch { setDisplayName('YOU') }
+    const name = localStorage.getItem('jarvis_fullname') || localStorage.getItem('jarvis_username') || 'YOU'
+    setDisplayName(name.toUpperCase())
   }, [])
 
   useEffect(() => {

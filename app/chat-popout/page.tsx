@@ -36,11 +36,17 @@ function PopoutContent() {
   const [activeConvId, setActiveConvId] = useState<string | null>(null)
   const [emailStatus, setEmailStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
   const [emailSentTo, setEmailSentTo] = useState('')
+  const [displayName, setDisplayName] = useState('YOU')
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     document.title = `Jarvis — ${agent.name}`
   }, [agent])
+
+  useEffect(() => {
+    const name = localStorage.getItem('jarvis_fullname') || localStorage.getItem('jarvis_username') || 'YOU'
+    setDisplayName(name.toUpperCase())
+  }, [])
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -178,7 +184,7 @@ function PopoutContent() {
             }`}>
               <div className="flex items-center justify-between mb-2 gap-4">
                 <div className="text-xs opacity-50">
-                  {msg.role === 'user' ? 'YOU' : `🤖 AGENT ${agent.id}`}
+                  {msg.role === 'user' ? displayName : `🤖 AGENT ${agent.id}`}
                 </div>
                 {msg.created_at && (
                   <div className="text-xs opacity-40">{formatTime(msg.created_at)}</div>
