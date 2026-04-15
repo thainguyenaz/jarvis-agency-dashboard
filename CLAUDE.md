@@ -265,3 +265,44 @@ Agent 07 correctly produced:
 - Brand: increase to $1,000 ✅
 - Detox: stay paused ✅
 - All items marked "Requires Thai Approval" ✅
+
+---
+
+## TELEGRAM NOTIFICATION RULES (hardcoded April 15, 2026 — commit deecef1)
+
+### What triggers a Telegram message — COMPLETE LIST:
+
+WEEKLY (always send):
+- Monday 7am AZ: Full Google Ads weekly report
+- Monday 6am AZ: SEO weekly scan report
+
+DAILY (only send if data changed):
+- 8am AZ: Daily health check — ONLY if status changed from yesterday. Never send "all green" if nothing changed.
+- 8:05am AZ: CTM quality — ONLY if 4-5 star calls came in OR qualified leads changed. Never send on zero-call days.
+- 9am AZ: Google Ads change monitor — ONLY if campaign changes detected
+
+EVENT-BASED (always send):
+- Approval requests — always send immediately
+- System errors — always send (API failures, PM2 crashes)
+- Agent 19 news — ONLY CRITICAL or WARNING level. INFO suppressed.
+
+### What was removed (fake/templated updates):
+- Daily health check "all green" messages when nothing changed
+- Daily CTM quality messages on zero-call days
+- Agent 19 INFO-level news (fired 90% of days with no real content)
+
+### telegram_last_sent table
+- Stores last sent value per metric in SQLite
+- Prevents duplicate sends when data has not changed
+- Table: telegram_last_sent (metric TEXT PRIMARY KEY, last_value TEXT, last_sent_at TEXT)
+
+### SQLite Backup Status (confirmed April 15, 2026)
+- Local backup: daily 2am AZ to /home/openclaw/data/backups/ — 7 day retention — WORKING
+- SharePoint backup: daily 11:05pm AZ via MS Graph — last confirmed March 10 — NEEDS FIX
+- GitHub backup: hourly at :10 — ACTIVE
+- fetched_at format: ISO datetime (fixed April 15, 2026 — 26 rows migrated from epoch)
+
+### GA4 Cache Issue (April 15, 2026)
+- GA4 landing pages cache showing 41+ hours stale
+- Investigate why GA4 nightly sync is not refreshing landing pages
+- Add to next session priorities
