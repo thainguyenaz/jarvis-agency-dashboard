@@ -298,7 +298,7 @@ EVENT-BASED (always send):
 
 ### SQLite Backup Status (confirmed April 15, 2026)
 - Local backup: daily 2am AZ to /home/openclaw/data/backups/ — 7 day retention — WORKING
-- SharePoint backup: daily 11:05pm AZ via MS Graph — last confirmed March 10 — NEEDS FIX
+- SharePoint backup: daily 11:05pm AZ via MS Graph — RESTORED April 15, 2026
 - GitHub backup: hourly at :10 — ACTIVE
 - fetched_at format: ISO datetime (fixed April 15, 2026 — 26 rows migrated from epoch)
 
@@ -306,3 +306,26 @@ EVENT-BASED (always send):
 - GA4 landing pages cache showing 41+ hours stale
 - Investigate why GA4 nightly sync is not refreshing landing pages
 - Add to next session priorities
+
+---
+
+## SHAREPOINT BACKUP — RESTORED April 15, 2026 (commit f78c94d)
+
+### What broke
+MS Graph OAuth refresh token stalled around March 10, 2026. Script ran daily but failed silently — 35 days of missed backups.
+
+### Fix applied
+- Token manually refreshed — valid for 90 days (expires ~July 14, 2026)
+- CALENDAR REMINDER NEEDED: Rotate MS Graph token before July 14, 2026
+
+### What gets backed up to SharePoint (37 files, daily at 11:05pm AZ)
+- /home/openclaw/data/jarvis-cache.db (SQLite database)
+- jarvis-agency-dashboard/CLAUDE.md
+- jarvis-marketing-agency/CLAUDE.md
+- Identity docs, memory files, system config, project memories
+
+### Backup schedule summary
+- SQLite local backup: 2am AZ daily → /home/openclaw/data/backups/ (7 day retention)
+- SharePoint backup: 11:05pm AZ daily → MS Graph upload (37 files)
+- GitHub backup: hourly at :10
+- Next SharePoint run: tonight 11:05pm AZ
