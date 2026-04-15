@@ -409,7 +409,7 @@ RECOMMENDATION FRAMEWORK:
         contextBlock += `Total calls: ${ctmQ.summary.total_calls}, qual rate: ${ctmQ.summary.qualification_rate}%, 5★: ${sd['5'] ?? 0}, 4★: ${sd['4'] ?? 0}\n`
 
         if (ctmQ.by_source) {
-          contextBlock += `\nQUALIFIED LEADS BY SOURCE:\n`
+          contextBlock += `\nQUALIFIED LEADS BY TRAFFIC SOURCE (these are CTM call sources, NOT Google Ads campaign names):\n`
           ctmQ.by_source.slice(0, 8).forEach((s: any) => {
             contextBlock += `- ${s.source}: ${s.qualified} qualified (${s.scores?.['5'] ?? 0} five-star), ${s.qualificationRate}% qual rate\n`
           })
@@ -418,10 +418,20 @@ RECOMMENDATION FRAMEWORK:
 
       const campHist = serverData?.campaignHistory || context?.campaignHistory
       if (campHist?.campaigns) {
-        contextBlock += `\nCAMPAIGN ALL-TIME HISTORY:\n`
-        campHist.campaigns.slice(0, 8).forEach((c: any) => {
-          contextBlock += `- ${c.campaign_name}: $${c.total_spend?.toFixed(0)} total, ${Math.round(c.total_conversions)} conv, CPA $${c.avg_cpa ?? 'N/A'}, ${c.first_active || '?'}–${c.last_active || '?'}\n`
-        })
+        const activeCamps = campHist.campaigns.filter((c: any) => c.status === 'ENABLED')
+        const pausedCamps = campHist.campaigns.filter((c: any) => c.status === 'PAUSED')
+        if (activeCamps.length > 0) {
+          contextBlock += `\nACTIVE CAMPAIGN ALL-TIME HISTORY:\n`
+          activeCamps.forEach((c: any) => {
+            contextBlock += `- ${c.campaign_name}: $${c.total_spend?.toFixed(0)} total, ${Math.round(c.total_conversions)} conv, CPA $${c.avg_cpa ?? 'N/A'}, active ${c.first_active || '?'}–${c.last_active || '?'}\n`
+          })
+        }
+        if (pausedCamps.length > 0) {
+          contextBlock += `\nPAUSED CAMPAIGNS (historical reference only — NOT currently running):\n`
+          pausedCamps.slice(0, 5).forEach((c: any) => {
+            contextBlock += `- ${c.campaign_name}: $${c.total_spend?.toFixed(0)} total (PAUSED)\n`
+          })
+        }
       }
 
       // Inject deep qualified leads data — server-side primary, client fallback
@@ -437,7 +447,12 @@ RECOMMENDATION FRAMEWORK:
         contextBlock += `Filtered out: ${qs.filtered_out_short_duration} short (<2min), ${qs.filtered_out_unanswered} unanswered\n`
       }
 
-      contextBlock += `\nKEY INSIGHT: True qualified CPL is typically much higher than Google-reported CPL. Always reference CTM star ratings, not Google conversion counts, when evaluating performance.\n`
+      contextBlock += `
+KEY INSIGHT: True qualified CPL is typically much higher than Google-reported CPL. Always reference CTM star ratings, not Google conversion counts, when evaluating performance.
+
+CRITICAL DATA INTEGRITY RULE:
+The ONLY active Google Ads campaigns are those listed in CAMPAIGN PERFORMANCE above. Do NOT invent, estimate, or hallucinate any campaign names, spend figures, click counts, or conversion numbers. If a data point is missing from the LIVE DATA sections above, say "data not available" — never fabricate numbers. Paused campaigns listed under PAUSED CAMPAIGNS are historical context only and are NOT currently spending. The "QUALIFIED LEADS BY SOURCE" section lists CTM call tracking sources (Google Organic, GBP, Direct), NOT Google Ads campaigns — do not confuse traffic sources with campaign names.
+`
     } else if (['03', '11', '18', '20'].includes(agentId)) {
       // All marketing/admissions agents get CTM quality data for cross-referencing
       const ctm = serverData?.ctmQuality || context?.ctm || context?.ctmQuality
