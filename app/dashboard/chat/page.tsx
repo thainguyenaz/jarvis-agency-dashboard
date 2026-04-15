@@ -62,6 +62,7 @@ function AgentChatContent() {
   const [liveContext, setLiveContext] = useState<any>(null)
   const [contextLoading, setContextLoading] = useState(false)
   const [mobileView, setMobileView] = useState<'agents' | 'history' | 'chat'>('agents')
+  const [emailStatus, setEmailStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -324,6 +325,31 @@ function AgentChatContent() {
     }
   }
 
+  async function sendEmailReport() {
+    if (messages.length === 0 || emailStatus === 'sending') return
+    setEmailStatus('sending')
+    try {
+      const t = localStorage.getItem('jarvis_token') || ''
+      const res = await fetch('/api/proxy/api/email-report', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${t}`,
+        },
+        body: JSON.stringify({
+          conversation: messages.map(m => ({ role: m.role, content: m.content })),
+          agent_name: selectedAgent.name,
+        }),
+      })
+      if (!res.ok) throw new Error('Send failed')
+      setEmailStatus('sent')
+      setTimeout(() => setEmailStatus('idle'), 3000)
+    } catch {
+      setEmailStatus('error')
+      setTimeout(() => setEmailStatus('idle'), 3000)
+    }
+  }
+
   return (
     <div className="flex h-[calc(100vh-80px)] -m-6">
 
@@ -436,6 +462,19 @@ function AgentChatContent() {
               }
             </div>
           </div>
+          {messages.length > 0 && (
+            <button
+              onClick={sendEmailReport}
+              disabled={emailStatus === 'sending'}
+              className={`text-xs font-mono px-1 ${
+                emailStatus === 'sent' ? 'text-jarvis-green'
+                  : emailStatus === 'error' ? 'text-jarvis-red'
+                  : 'text-jarvis-dim'
+              }`}
+            >
+              {emailStatus === 'sending' ? '...' : emailStatus === 'sent' ? '✓' : '✉'}
+            </button>
+          )}
           <button
             onClick={() => window.open(
               `/dashboard/chat?agent=${selectedAgent.id}`,
@@ -609,6 +648,24 @@ function AgentChatContent() {
                 }
               </div>
             </div>
+            {messages.length > 0 && (
+              <button
+                onClick={sendEmailReport}
+                disabled={emailStatus === 'sending'}
+                className={`font-mono text-xs px-2 py-1 border rounded transition-all ${
+                  emailStatus === 'sent'
+                    ? 'text-jarvis-green border-jarvis-green'
+                    : emailStatus === 'error'
+                    ? 'text-jarvis-red border-jarvis-red'
+                    : 'text-jarvis-dim hover:text-jarvis-cyan border-jarvis-border hover:border-jarvis-cyan'
+                }`}
+              >
+                {emailStatus === 'sending' ? 'Sending...'
+                  : emailStatus === 'sent' ? 'Sent to thai@desertrecoverycenters.com'
+                  : emailStatus === 'error' ? 'Send failed'
+                  : '✉ EMAIL'}
+              </button>
+            )}
             <button
               onClick={() => window.open(`/dashboard/chat?agent=${selectedAgent.id}`, 'agent-chat', 'width=900,height=750,scrollbars=yes')}
               className="text-jarvis-dim hover:text-jarvis-cyan font-mono text-xs px-2 py-1 border border-jarvis-border rounded hover:border-jarvis-cyan transition-all"
