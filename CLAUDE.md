@@ -329,3 +329,33 @@ MS Graph OAuth refresh token stalled around March 10, 2026. Script ran daily but
 - SharePoint backup: 11:05pm AZ daily → MS Graph upload (37 files)
 - GitHub backup: hourly at :10
 - Next SharePoint run: tonight 11:05pm AZ
+
+---
+
+## DATA BUG FIXES — April 15, 2026 (commits 1dd3ae9 + 9120cf5)
+
+### Bug 1 — Google Ads missing days parameter (FIXED)
+- Before: fetched /api/google-ads/performance (30-day default) — LLM hallucinated 7-day numbers
+- After: fetches ?days=7 AND ?days=30 separately, labeled clearly in context
+- Rule: ALWAYS pass ?days=7 for 7-day context, ?days=30 for 30-day. Never use default.
+
+### Bug 2 — Hardcoded occupancy (FIXED)
+- Before: hardcoded "Church 9/10 | Frier 5/10 | Total 14/20" in 2 places — stale and wrong
+- After: live Kipu census with all 3 locations (Church, Frier, Indian School)
+- Rule: NEVER hardcode occupancy. Always pull from /api/kipu/census live.
+
+### Bug 3 — Wrong Google Ads field names (FIXED)
+- Before: gads.spend, gads.cost_per_conversion — fields don't exist, context was empty
+- After: gads.summary.total_spend, gads.summary.total_clicks, gads.summary.avg_cpc, gads.summary.total_conversions, gads.summary.cost_per_conversion
+- Rule: Always use gads.summary.* for aggregate fields
+
+### Bug 4 — Hardcoded speed-to-lead (FIXED)
+- Before: avg_response_time_minutes: 12.4 hardcoded in 3 places — never measured
+- After: returns null with note "Speed-to-lead measurement not yet instrumented"
+- Rule: Never hardcode metrics. If not measured, return null and say so.
+
+### Verification standard
+After any agent data change, run raw API comparison:
+curl http://localhost:3002/api/google-ads/performance?days=7 → compare to agent report
+curl http://localhost:3002/api/kipu/census → compare to occupancy in agent report
+If numbers differ by more than rounding, there is a data bug.
