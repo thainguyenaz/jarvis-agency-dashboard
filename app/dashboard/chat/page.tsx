@@ -325,11 +325,14 @@ function AgentChatContent() {
     }
   }
 
+  const [emailSentTo, setEmailSentTo] = useState('')
+
   async function sendEmailReport() {
     if (messages.length === 0 || emailStatus === 'sending') return
     setEmailStatus('sending')
     try {
       const t = localStorage.getItem('jarvis_token') || ''
+      const user = JSON.parse(localStorage.getItem('jarvis_user') || '{}')
       const res = await fetch('/api/proxy/api/email-report', {
         method: 'POST',
         headers: {
@@ -339,9 +342,12 @@ function AgentChatContent() {
         body: JSON.stringify({
           conversation: messages.map(m => ({ role: m.role, content: m.content })),
           agent_name: selectedAgent.name,
+          username: user.username || '',
         }),
       })
       if (!res.ok) throw new Error('Send failed')
+      const data = await res.json()
+      setEmailSentTo(data.sent_to || '')
       setEmailStatus('sent')
       setTimeout(() => setEmailStatus('idle'), 3000)
     } catch {
@@ -661,7 +667,7 @@ function AgentChatContent() {
                 }`}
               >
                 {emailStatus === 'sending' ? 'Sending...'
-                  : emailStatus === 'sent' ? 'Sent to thai@desertrecoverycenters.com'
+                  : emailStatus === 'sent' ? `Sent to ${emailSentTo}`
                   : emailStatus === 'error' ? 'Send failed'
                   : '✉ EMAIL'}
               </button>
