@@ -474,7 +474,7 @@ approval, clearly state it requires Thai approval before execution.`
         'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
-        model: 'claude-opus-4-5-20251001',
+        model: 'claude-opus-4-20250514',
         max_tokens: 4096,
         system: systemPrompt,
         messages

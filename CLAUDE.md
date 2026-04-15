@@ -44,7 +44,7 @@ Hardcoded into BEHAVIORAL_HEALTH_EXPERTISE in app/api/chat-agent/route.ts.
 Last updated: April 13, 2026
 
 ## MODEL
-- All agents use claude-opus-4-5-20251001
+- All agents use claude-opus-4-20250514
 - max_tokens: 4096
 - Never downgrade to Sonnet without Thai explicit approval
 
