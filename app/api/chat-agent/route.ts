@@ -346,112 +346,124 @@ this context in your response.`
       const ps = requestedDays === 7 ? pSummary : (p?.summary || p)
       const rangeLabel = `${requestedDays} day${requestedDays === 1 ? '' : 's'}`
 
-      contextBlock = `
-
-LIVE GOOGLE ADS DATA (server-side, SQLite-first):
-
-Account Summary (${rangeLabel}):
-- Total Spend: $${ps?.total_spend?.toFixed(2) ?? 'unknown'}
-- Clicks: ${ps?.total_clicks ?? 'unknown'}
-- CPC: $${ps?.avg_cpc?.toFixed(2) ?? 'unknown'}
-- Conversions: ${Math.round(ps?.total_conversions || 0)}
-- CPL: $${ps?.cost_per_conversion?.toFixed(2) ?? 'unknown'} (target: $150)
-- CTR: ${ps?.avg_ctr?.toFixed(2) ?? 'unknown'}%
-
-RECOMMENDATION FRAMEWORK:
-- A "conversion" in Google Ads does NOT mean a qualified lead — always cross-reference with CTM quality scores below
-- NEVER recommend increasing PMax budget based on call volume alone
-- When recommending pauses, budget shifts, or bid changes, cite the exact campaign name and metric
-- Free channels (GBP, Organic) should be evaluated on qualified-lead output, not just call volume`
-
-      // Inject per-campaign performance data
+      // ── Build Agent 07 context: campaigns first, then supporting data ──
       const campaigns = p?.campaigns
+      const cq = serverData?.campaignQuality || context?.campaignQuality
+      const ctmQ = serverData?.ctmQuality || context?.ctmQuality
+      const campHist = serverData?.campaignHistory || context?.campaignHistory
+      const qlDeep07 = serverData?.qualifiedLeadsDeep || context?.qualifiedLeadsDeep
+
+      // Aggregate daily Google Ads rows by campaign name
+      const byName: Record<string, { spend: number; clicks: number; impressions: number; conversions: number }> = {}
       if (campaigns && Array.isArray(campaigns)) {
-        // Aggregate daily rows by campaign name
-        const byName: Record<string, { spend: number; clicks: number; impressions: number; conversions: number; status: number }> = {}
         campaigns.forEach((c: any) => {
           const name = c.campaignName || c.campaign_name || 'Unknown'
-          if (!byName[name]) byName[name] = { spend: 0, clicks: 0, impressions: 0, conversions: 0, status: c.status }
+          if (!byName[name]) byName[name] = { spend: 0, clicks: 0, impressions: 0, conversions: 0 }
           byName[name].spend += c.spend || 0
           byName[name].clicks += c.clicks || 0
           byName[name].impressions += c.impressions || 0
           byName[name].conversions += c.conversions || 0
         })
-        contextBlock += `\n\nCAMPAIGN PERFORMANCE (${rangeLabel}):`
-        Object.entries(byName)
-          .sort((a, b) => b[1].spend - a[1].spend)
-          .forEach(([name, d]) => {
-            const cpc = d.clicks > 0 ? (d.spend / d.clicks).toFixed(2) : 'N/A'
-            const cpl = d.conversions > 0 ? (d.spend / d.conversions).toFixed(2) : 'NONE'
-            contextBlock += `\n- ${name}: $${d.spend.toFixed(2)} spend, ${d.clicks} clicks, CPC $${cpc}, ${d.conversions} conv, CPL $${cpl}`
-          })
       }
+      const campaignNames = Object.keys(byName)
 
-      // CTM quality from server data
-      const cq = serverData?.campaignQuality || context?.campaignQuality
-      const ctmQ = serverData?.ctmQuality || context?.ctmQuality
-
+      // Build per-campaign CTM quality lookup (keyed by campaign name)
+      const ctmByCamp: Record<string, { qualified: number; qualified_cpl: string; verdict: string }> = {}
       if (cq?.campaigns) {
-        contextBlock += `\n\nCTM QUALITY CORRELATION:\n`
-        contextBlock += `Account qualification rate: ${cq.account_summary?.account_qualification_rate}%\n`
-        contextBlock += `Blended qualified CPL: $${cq.account_summary?.blended_qualified_cpl}\n\n`
-        contextBlock += `CAMPAIGN TRUE QUALIFIED CPL:\n`
         cq.campaigns.forEach((c: any) => {
           if (c.ad_spend > 0) {
-            contextBlock += `- ${c.campaign}: $${c.ad_spend} spend, ${c.qualified_leads} qualified (4-5★), CPL: $${c.qualified_cpl || 'NONE'}, verdict: ${c.verdict}\n`
+            ctmByCamp[c.campaign] = { qualified: c.qualified_leads, qualified_cpl: c.qualified_cpl || 'NONE', verdict: c.verdict }
           }
         })
       }
 
+      // Build per-campaign history lookup
+      const histByCamp: Record<string, { total_spend: number; total_conv: number; status: string }> = {}
+      if (campHist?.campaigns) {
+        campHist.campaigns.forEach((c: any) => {
+          histByCamp[c.campaign_name] = { total_spend: c.total_spend || 0, total_conv: Math.round(c.total_conversions || 0), status: c.status || 'UNKNOWN' }
+        })
+      }
+
+      // ── CONTEXT BLOCK: strict campaign enumeration ──
+      contextBlock = `
+
+═══ CRITICAL: DATA INTEGRITY RULE ═══
+The COMPLETE list of Google Ads campaigns is enumerated below. There are NO other campaigns.
+Do NOT invent, estimate, or reference ANY campaign name not listed below.
+Names like "General Non-Brand", "Alcohol Rehab", "Drug Rehab", "Dual Diagnosis" DO NOT EXIST.
+If data is missing, say "data not available" — NEVER fabricate numbers.
+
+═══ GOOGLE ADS ACCOUNT SUMMARY (${rangeLabel}) ═══
+Total Spend: $${ps?.total_spend?.toFixed(2) ?? 'unknown'}
+Total Clicks: ${ps?.total_clicks ?? 'unknown'}
+Avg CPC: $${ps?.avg_cpc?.toFixed(2) ?? 'unknown'}
+Conversions: ${Math.round(ps?.total_conversions || 0)}
+CPL: $${ps?.cost_per_conversion?.toFixed(2) ?? 'unknown'} (target: $150)
+CTR: ${ps?.avg_ctr?.toFixed(2) ?? 'unknown'}%`
+
+      // Enumerate each campaign with ALL data attached
+      if (campaignNames.length > 0) {
+        contextBlock += `\n\n═══ COMPLETE CAMPAIGN LIST (${rangeLabel}) — ${campaignNames.length} CAMPAIGNS TOTAL ═══`
+        Object.entries(byName)
+          .sort((a, b) => b[1].spend - a[1].spend)
+          .forEach(([name, d], i) => {
+            const cpc = d.clicks > 0 ? (d.spend / d.clicks).toFixed(2) : 'N/A'
+            const cpl = d.conversions > 0 ? (d.spend / d.conversions).toFixed(2) : 'NONE'
+            const hist = histByCamp[name]
+            const ctm = ctmByCamp[name]
+            const status = hist?.status || 'ENABLED'
+
+            contextBlock += `\n\n${i + 1}. ${name} [${status}]`
+            contextBlock += `\n   ${rangeLabel} Performance: $${d.spend.toFixed(2)} spend, ${d.clicks} clicks, CPC $${cpc}, ${d.conversions} conv, CPL $${cpl}`
+            if (hist) {
+              contextBlock += `\n   All-Time: $${hist.total_spend.toFixed(0)} total spend, ${hist.total_conv} total conv`
+            }
+            if (ctm) {
+              contextBlock += `\n   CTM Quality (30d): ${ctm.qualified} qualified leads (4-5★), qualified CPL: $${ctm.qualified_cpl}, verdict: ${ctm.verdict}`
+            }
+          })
+      } else {
+        contextBlock += `\n\n⚠ NO CAMPAIGN DATA AVAILABLE — server data fetch may have failed. Do NOT guess campaign names or numbers.`
+      }
+
+      // Paused campaigns from history that aren't in current performance
+      const pausedFromHist = Object.entries(histByCamp).filter(([name, h]) => h.status === 'PAUSED' && !byName[name])
+      if (pausedFromHist.length > 0) {
+        contextBlock += `\n\n═══ PAUSED CAMPAIGNS (not currently spending) ═══`
+        pausedFromHist.forEach(([name, h]) => {
+          contextBlock += `\n- ${name}: $${h.total_spend.toFixed(0)} all-time spend, ${h.total_conv} conv (PAUSED)`
+        })
+      }
+
+      // CTM account-level summary
+      if (cq?.account_summary) {
+        contextBlock += `\n\n═══ CTM QUALITY SUMMARY (30d) ═══`
+        contextBlock += `\nAccount qualification rate: ${cq.account_summary.account_qualification_rate}%`
+        contextBlock += `\nBlended qualified CPL: $${cq.account_summary.blended_qualified_cpl}`
+      }
       if (ctmQ?.summary) {
         const sd = ctmQ.summary.score_distribution || {}
-        contextBlock += `\nCTM QUALITY SUMMARY (30d):\n`
-        contextBlock += `Total calls: ${ctmQ.summary.total_calls}, qual rate: ${ctmQ.summary.qualification_rate}%, 5★: ${sd['5'] ?? 0}, 4★: ${sd['4'] ?? 0}\n`
-
-        if (ctmQ.by_source) {
-          contextBlock += `\nQUALIFIED LEADS BY TRAFFIC SOURCE (these are CTM call sources, NOT Google Ads campaign names):\n`
-          ctmQ.by_source.slice(0, 8).forEach((s: any) => {
-            contextBlock += `- ${s.source}: ${s.qualified} qualified (${s.scores?.['5'] ?? 0} five-star), ${s.qualificationRate}% qual rate\n`
-          })
-        }
+        contextBlock += `\nTotal calls: ${ctmQ.summary.total_calls}, qual rate: ${ctmQ.summary.qualification_rate}%, 5★: ${sd['5'] ?? 0}, 4★: ${sd['4'] ?? 0}`
       }
 
-      const campHist = serverData?.campaignHistory || context?.campaignHistory
-      if (campHist?.campaigns) {
-        const activeCamps = campHist.campaigns.filter((c: any) => c.status === 'ENABLED')
-        const pausedCamps = campHist.campaigns.filter((c: any) => c.status === 'PAUSED')
-        if (activeCamps.length > 0) {
-          contextBlock += `\nACTIVE CAMPAIGN ALL-TIME HISTORY:\n`
-          activeCamps.forEach((c: any) => {
-            contextBlock += `- ${c.campaign_name}: $${c.total_spend?.toFixed(0)} total, ${Math.round(c.total_conversions)} conv, CPA $${c.avg_cpa ?? 'N/A'}, active ${c.first_active || '?'}–${c.last_active || '?'}\n`
-          })
-        }
-        if (pausedCamps.length > 0) {
-          contextBlock += `\nPAUSED CAMPAIGNS (historical reference only — NOT currently running):\n`
-          pausedCamps.slice(0, 5).forEach((c: any) => {
-            contextBlock += `- ${c.campaign_name}: $${c.total_spend?.toFixed(0)} total (PAUSED)\n`
-          })
-        }
-      }
-
-      // Inject deep qualified leads data — server-side primary, client fallback
-      const qlDeep07 = serverData?.qualifiedLeadsDeep || context?.qualifiedLeadsDeep
+      // Qualified leads deep (totals only — no campaign/source lists to avoid name confusion)
       if (qlDeep07?.summary) {
         const qs = qlDeep07.summary
-        contextBlock += `\nTRUE QUALIFIED LEADS (4-5 star, 2+ min calls, last 30 days):\n`
-        contextBlock += `Total: ${qs.qualified_leads} calls\n`
-        contextBlock += `By source: ${(qs.by_source || []).map((s: any) => `${s.source} (${s.count}, avg ${s.avg_duration}s)`).join(', ')}\n`
-        contextBlock += `By campaign: ${(qs.by_campaign || []).map((c: any) => `${c.campaign} (${c.count}, avg ${c.avg_duration}s)`).join(', ')}\n`
-        contextBlock += `4-star calls: ${qs.by_score?.['4'] ?? 0} | 5-star calls: ${qs.by_score?.['5'] ?? 0}\n`
-        contextBlock += `Average duration of qualified calls: ${qs.avg_duration_qualified}s\n`
-        contextBlock += `Filtered out: ${qs.filtered_out_short_duration} short (<2min), ${qs.filtered_out_unanswered} unanswered\n`
+        contextBlock += `\n\n═══ TRUE QUALIFIED LEADS (4-5 star, 2+ min calls, 30d) ═══`
+        contextBlock += `\nTotal: ${qs.qualified_leads} qualified calls`
+        contextBlock += `\n4-star: ${qs.by_score?.['4'] ?? 0} | 5-star: ${qs.by_score?.['5'] ?? 0}`
+        contextBlock += `\nAvg duration: ${qs.avg_duration_qualified}s`
+        contextBlock += `\nFiltered out: ${qs.filtered_out_short_duration} short (<2min), ${qs.filtered_out_unanswered} unanswered`
       }
 
       contextBlock += `
-KEY INSIGHT: True qualified CPL is typically much higher than Google-reported CPL. Always reference CTM star ratings, not Google conversion counts, when evaluating performance.
 
-CRITICAL DATA INTEGRITY RULE:
-The ONLY active Google Ads campaigns are those listed in CAMPAIGN PERFORMANCE above. Do NOT invent, estimate, or hallucinate any campaign names, spend figures, click counts, or conversion numbers. If a data point is missing from the LIVE DATA sections above, say "data not available" — never fabricate numbers. Paused campaigns listed under PAUSED CAMPAIGNS are historical context only and are NOT currently spending. The "QUALIFIED LEADS BY SOURCE" section lists CTM call tracking sources (Google Organic, GBP, Direct), NOT Google Ads campaigns — do not confuse traffic sources with campaign names.
+═══ RULES ═══
+- A Google Ads "conversion" does NOT mean a qualified lead — cross-reference with CTM quality above
+- NEVER recommend increasing PMax budget based on call volume alone
+- When recommending changes, cite the exact campaign name and metric from the data above
+- The campaigns above are THE COMPLETE LIST — do not reference any other campaign names
 `
     } else if (['03', '11', '18', '20'].includes(agentId)) {
       // All marketing/admissions agents get CTM quality data for cross-referencing
