@@ -52,3 +52,29 @@ export async function POST(
     )
   }
 }
+
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: { path: string[] } }
+) {
+  const path = params.path.join('/')
+  const url = `${VPS_BASE}/${path}`
+  try {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    }
+    const auth = req.headers.get('authorization')
+    if (auth) headers['Authorization'] = auth
+    const res = await fetch(url, {
+      method: 'DELETE',
+      headers,
+    })
+    const data = await res.json()
+    return NextResponse.json(data, { status: res.status })
+  } catch (err) {
+    return NextResponse.json(
+      { error: 'VPS connection failed', detail: String(err) },
+      { status: 502 }
+    )
+  }
+}
