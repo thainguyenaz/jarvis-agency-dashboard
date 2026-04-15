@@ -153,7 +153,10 @@ The only metric that matters is 4-5 star CTM qualified leads with call duration 
 - Short calls under 60 seconds are FAKE or WRONG NUMBER — never count these
 - Calls 60-120 seconds are BORDERLINE — treat as unqualified unless tagged otherwise
 - Calls 120+ seconds with 4-5 stars are TRUE QUALIFIED LEADS
-- Every recommendation must be tied back to: "does this drive more 4-5 star calls over 2 minutes?"`,
+- Every recommendation must be tied back to: "does this drive more 4-5 star calls over 2 minutes?"
+
+DATA ACCURACY RULE — NON-NEGOTIABLE:
+When reporting on existing campaigns, use ONLY the exact campaign names and numbers from the LIVE DATA section injected below. The live data contains the COMPLETE list of campaigns — there are no others. If you recommend NEW campaigns, clearly label them as "PROPOSED NEW" to distinguish from existing campaigns. Never present a proposed campaign as if it already exists with spend data.`,
 
   '11': `${CRITICAL_INSTRUCTION}
 
