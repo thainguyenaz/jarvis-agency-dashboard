@@ -3,7 +3,7 @@ import fs from 'fs'
 
 const DB_PATH = '/home/openclaw/data/jarvis-cache.db'
 const STALE_HOURS = 25
-const VPS_BASE = 'http://localhost:3002'
+const VPS_BASE = 'http://93.188.166.239:3002'
 
 interface CacheResult {
   value: any
