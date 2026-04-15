@@ -40,7 +40,7 @@ export default function OverviewPage() {
 
       const cards: MetricCard[] = [
         {
-          label: 'OVERALL OCCUPANCY',
+          label: 'Overall Occupancy',
           value: censusData ? `${rtcPct}%` : '—',
           sub: censusData ? `${rtcOccupied}/20 beds` : 'No data',
           status: !censusData ? 'neutral' :
@@ -48,13 +48,13 @@ export default function OverviewPage() {
             rtcPct < 70 ? 'warn' : 'good'
         },
         {
-          label: 'AD SPEND (30D)',
+          label: 'Ad Spend (30d)',
           value: adsData ? `$${((adsData.summary?.total_spend || 0) / 1000).toFixed(1)}K` : '—',
           sub: adsData ? `$${Math.round((adsData.summary?.total_spend || 0) / 30)}/day avg` : 'No data',
           status: 'neutral'
         },
         {
-          label: 'COST PER LEAD',
+          label: 'Cost per Lead',
           value: adsData ? `$${Math.round(adsData.summary?.cost_per_conversion || 0)}` : '—',
           sub: 'Target: <$150',
           status: !adsData ? 'neutral' :
@@ -62,7 +62,7 @@ export default function OverviewPage() {
             (adsData.summary?.cost_per_conversion || 0) > 200 ? 'warn' : 'good'
         },
         {
-          label: 'CALL ANSWER RATE',
+          label: 'Call Answer Rate',
           value: ctmData ? `${ctmData.answer_rate}%` : '—',
           sub: ctmData ? `${ctmData.total_calls_30d} total calls` : 'No data',
           status: !ctmData ? 'neutral' :
@@ -70,7 +70,7 @@ export default function OverviewPage() {
             ctmData.answer_rate < 75 ? 'warn' : 'good'
         },
         {
-          label: 'OPEN DEALS',
+          label: 'Open Deals',
           value: hubspotData ? `${hubspotData.deals_count || 0}` : '—',
           sub: hubspotData
             ? `${(hubspotData.recent_deals || []).filter((d: any) => d.stage === 'closedwon').length} closed won`
@@ -78,7 +78,7 @@ export default function OverviewPage() {
           status: 'neutral'
         },
         {
-          label: 'ACTIVE AGENTS',
+          label: 'Active Agents',
           value: agentsData?.agents ?
             `${agentsData.agents.filter((a: any) => a.status === 'active').length}/20` : '—',
           sub: 'Phase 1: Monitor only',
@@ -96,40 +96,50 @@ export default function OverviewPage() {
   }
 
   const statusColors = {
-    good: 'border-jarvis-green text-jarvis-green',
-    warn: 'border-jarvis-yellow text-jarvis-yellow',
-    critical: 'border-jarvis-red text-jarvis-red',
+    good: 'border-jarvis-green/40 text-jarvis-green',
+    warn: 'border-jarvis-yellow/40 text-jarvis-yellow',
+    critical: 'border-jarvis-red/40 text-jarvis-red',
     neutral: 'border-jarvis-border text-jarvis-cyan',
+  }
+
+  const statusDot = {
+    good: 'bg-jarvis-green',
+    warn: 'bg-jarvis-yellow',
+    critical: 'bg-jarvis-red',
+    neutral: 'bg-jarvis-dim',
   }
 
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-jarvis-cyan font-mono animate-pulse">
-          LOADING JARVIS DATA...
+        <div className="text-jarvis-dim text-sm animate-pulse">
+          Loading data...
         </div>
       </div>
     )
   }
 
   if (metrics.length === 0) return (
-    <div className="bg-jarvis-surface border border-jarvis-red border-opacity-30 rounded-lg p-8 text-center">
-      <div className="text-jarvis-red font-mono font-bold mb-2">DATA UNAVAILABLE</div>
-      <div className="text-jarvis-dim text-xs font-mono">
-        Check VPS connection ·
-        <button onClick={() => window.location.reload()} className="text-jarvis-cyan ml-1 hover:underline">Retry</button>
+    <div className="bg-jarvis-surface border border-jarvis-red/20 rounded-card p-8 text-center">
+      <div className="text-jarvis-red font-medium mb-2">Data Unavailable</div>
+      <div className="text-jarvis-dim text-xs">
+        Check VPS connection
+        <span className="mx-2">·</span>
+        <button onClick={() => window.location.reload()} className="text-jarvis-cyan hover:underline cursor-pointer">Retry</button>
       </div>
     </div>
   )
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div className="flex items-center justify-between gap-2">
-        <h1 className="text-lg md:text-2xl font-bold font-mono text-jarvis-cyan tracking-widest">
-          COMMAND OVERVIEW
-        </h1>
-        <div className="text-jarvis-dim text-xs font-mono flex-shrink-0 hidden sm:block">
-          {new Date().toLocaleString('en-US', { timeZone: 'America/Phoenix' })} MST
+        <div>
+          <h1 className="text-lg md:text-xl font-medium text-jarvis-text tracking-wide">
+            Command Overview
+          </h1>
+          <div className="text-jarvis-dim text-xs mt-1 hidden sm:block">
+            {new Date().toLocaleString('en-US', { timeZone: 'America/Phoenix' })} MST
+          </div>
         </div>
       </div>
 
@@ -138,40 +148,42 @@ export default function OverviewPage() {
         {metrics.map((m, i) => (
           <div
             key={i}
-            className={`bg-jarvis-surface border rounded-lg p-3 md:p-4 ${statusColors[m.status]}`}
+            className={`bg-jarvis-surface border rounded-card p-4 md:p-5 shadow-card ${statusColors[m.status]}`}
           >
-            <div className="text-xs font-mono opacity-60 mb-1 truncate">{m.label}</div>
-            <div className="text-xl md:text-3xl font-bold font-mono">{m.value}</div>
-            {m.sub && <div className="text-xs font-mono opacity-50 mt-1 truncate">{m.sub}</div>}
+            <div className="flex items-center gap-2 mb-3">
+              <div className={`w-1.5 h-1.5 rounded-full ${statusDot[m.status]}`} />
+              <div className="text-xs text-jarvis-dim truncate">{m.label}</div>
+            </div>
+            <div className="text-2xl md:text-3xl font-semibold font-mono tracking-tight">{m.value}</div>
+            {m.sub && <div className="text-xs text-jarvis-dim mt-2 truncate">{m.sub}</div>}
           </div>
         ))}
       </div>
 
       {/* Agent Roster */}
-      <div className="bg-jarvis-surface border border-jarvis-border rounded-lg p-4">
-        <h2 className="text-jarvis-cyan font-mono font-bold mb-4 tracking-wider">
-          AGENT ROSTER — PHASE 1 (MONITOR ONLY)
+      <div>
+        <h2 className="text-sm font-medium text-jarvis-text mb-4 tracking-wide">
+          Agent Roster
+          <span className="text-jarvis-dim font-normal ml-2">Phase 1 — Monitor Only</span>
         </h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
           {agents.map((agent: any) => (
             <div
               key={agent.id}
-              className="bg-jarvis-bg border border-jarvis-border rounded p-3"
+              className="bg-jarvis-surface border border-jarvis-border rounded-card p-3 shadow-card"
             >
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-jarvis-dim text-xs font-mono">
-                  AGENT {agent.id}
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="text-jarvis-dim text-xs">
+                  Agent {agent.id}
                 </span>
-                <span className={`text-xs font-mono ${
-                  agent.status === 'active' ? 'text-jarvis-green' :
-                  agent.status === 'monitor-only' ? 'text-jarvis-yellow' :
-                  agent.status === 'phase-locked' ? 'text-jarvis-red' :
-                  'text-jarvis-dim'
-                }`}>
-                  ● {agent.status}
-                </span>
+                <div className={`w-1.5 h-1.5 rounded-full ${
+                  agent.status === 'active' ? 'bg-jarvis-green' :
+                  agent.status === 'monitor-only' ? 'bg-jarvis-yellow' :
+                  agent.status === 'phase-locked' ? 'bg-jarvis-red' :
+                  'bg-jarvis-dim'
+                }`} />
               </div>
-              <div className="text-jarvis-text text-xs font-mono truncate">
+              <div className="text-jarvis-text text-xs truncate">
                 {agent.name}
               </div>
             </div>
