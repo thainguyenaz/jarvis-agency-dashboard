@@ -63,7 +63,16 @@ function AgentChatContent() {
   const [contextLoading, setContextLoading] = useState(false)
   const [mobileView, setMobileView] = useState<'agents' | 'history' | 'chat'>('agents')
   const [emailStatus, setEmailStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
+  const [displayName, setDisplayName] = useState('YOU')
   const messagesEndRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    try {
+      const user = JSON.parse(localStorage.getItem('jarvis_user') || '{}')
+      const name = user.full_name || user.fullName || user.username || 'YOU'
+      setDisplayName(name.toUpperCase())
+    } catch { setDisplayName('YOU') }
+  }, [])
 
   useEffect(() => {
     loadConversations()
@@ -483,9 +492,9 @@ function AgentChatContent() {
           )}
           <button
             onClick={() => window.open(
-              `/dashboard/chat?agent=${selectedAgent.id}`,
-              'agent-chat',
-              'width=900,height=750'
+              `/chat-popout?agent=${selectedAgent.id}`,
+              'jarvis-chat-popout',
+              'width=900,height=700,scrollbars=yes,resizable=yes'
             )}
             className="text-jarvis-dim text-sm flex-shrink-0"
           >
@@ -512,7 +521,7 @@ function AgentChatContent() {
                   : 'bg-jarvis-surface border border-jarvis-border text-jarvis-text'
               }`}>
                 <div className="text-xs opacity-50 mb-1">
-                  {msg.role === 'user' ? 'YOU' : `🤖 ${selectedAgent.id}`}
+                  {msg.role === 'user' ? displayName : `🤖 ${selectedAgent.id}`}
                   {msg.created_at && (
                     <span className="ml-2">{formatDate(msg.created_at)}</span>
                   )}
@@ -673,7 +682,7 @@ function AgentChatContent() {
               </button>
             )}
             <button
-              onClick={() => window.open(`/dashboard/chat?agent=${selectedAgent.id}`, 'agent-chat', 'width=900,height=750,scrollbars=yes')}
+              onClick={() => window.open(`/chat-popout?agent=${selectedAgent.id}`, 'jarvis-chat-popout', 'width=900,height=700,scrollbars=yes,resizable=yes')}
               className="text-jarvis-dim hover:text-jarvis-cyan font-mono text-xs px-2 py-1 border border-jarvis-border rounded hover:border-jarvis-cyan transition-all"
             >⤢ POPOUT</button>
           </div>
@@ -693,7 +702,7 @@ function AgentChatContent() {
                     : 'bg-jarvis-surface border border-jarvis-border text-jarvis-text px-4 py-3'
                 }`}>
                   <div className="flex items-center justify-between mb-2 gap-4">
-                    <div className="text-xs opacity-50">{msg.role === 'user' ? 'THAI' : `🤖 AGENT ${selectedAgent.id}`}</div>
+                    <div className="text-xs opacity-50">{msg.role === 'user' ? displayName : `🤖 AGENT ${selectedAgent.id}`}</div>
                     {msg.created_at && <div className="text-xs opacity-40">{formatDate(msg.created_at)}</div>}
                   </div>
                   <div className="whitespace-pre-wrap leading-relaxed break-words">{msg.content}</div>
