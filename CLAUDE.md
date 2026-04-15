@@ -239,3 +239,29 @@ Expected: Ready in ~29 seconds
 ### Freshness Metadata
 Every CTM response includes: _fetchedAt, _ageMinutes, _cached
 UI displays "Last updated: X minutes ago (cached)" in green/yellow
+
+---
+
+## AGENT 07 — VERIFIED WORKING (April 14, 2026)
+
+### Anti-Hallucination Fix (commits eee27b9 + 25285c9)
+- Campaign data injected as single numbered list with ALL metrics attached
+- CTM by-source explicitly labeled "TRAFFIC SOURCE (NOT Google Ads campaign names)"
+- CRITICAL DATA INTEGRITY RULE: use only provided data, never fabricate
+
+### Strategy Guardrails Hardcoded (commit 25285c9)
+- PMax: labeled FAKE $3 CPA, real CPL $946, never recommend increasing
+- Detox: permanently paused, $121K waste, no reactivation
+- Mental Health [STR]: reduce to $14,000, exact match only
+- Addiction Treatment [STR]: reduce to $12,000, exact match only
+- Brand [STR]: never cut, best qualification rate at 14.3%
+- All recommendations require Thai approval — Phase 1 advisory only
+
+### Verified Test Output (April 14, 2026)
+Agent 07 correctly produced:
+- Reduce Mental Health to $14,000 ✅
+- Reduce Addiction to $12,000 ✅
+- PMax: hold, do not increase, conversions are fake ✅
+- Brand: increase to $1,000 ✅
+- Detox: stay paused ✅
+- All items marked "Requires Thai Approval" ✅
