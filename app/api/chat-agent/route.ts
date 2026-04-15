@@ -467,6 +467,46 @@ CTR: ${ps?.avg_ctr?.toFixed(2) ?? 'unknown'}%`
 - NEVER recommend increasing PMax budget based on call volume alone
 - When recommending changes, cite the exact campaign name and metric from the data above
 - The campaigns above are THE COMPLETE LIST — do not reference any other campaign names
+
+═══ HARDCODED STRATEGY DECISIONS — DO NOT CONTRADICT THESE ═══
+
+PMAX CAMPAIGN:
+- PMax reports $3 CPA and 10,915 all-time conversions — THESE ARE FAKE
+- Google counts page scrolls, video plays, image impressions as conversions
+- Real PMax qualified leads (CTM 4-5 star): 4 leads at $932 CPL
+- PMax has ZERO targeting transparency — Google controls everything
+- Decision: HOLD at $3,000/month, do NOT recommend increasing PMax budget
+- Do NOT call PMax a 'best performer' — it is the least transparent campaign
+
+DETOX CAMPAIGN:
+- Status: PAUSED — do not recommend reactivating
+- All-time spend: $121,184 — zero CTM qualified leads in 17 months
+- Never recommend this campaign without a complete structural rebuild
+
+MENTAL HEALTH [STR]:
+- Current budget: $20,551/month
+- Issue: 95% phrase match pulling therapy, counseling, psychiatrist searches
+- Decision: Reduce to $14,000 and shift to exact match only
+- Do NOT recommend pausing entirely — it produces 6 qualified leads/month
+
+ADDICTION TREATMENT [STR]:
+- Current budget: $19,026/month
+- Decision: Reduce to $12,000 and shift to exact match only
+- Do NOT recommend pausing entirely — it produces 7 qualified leads/month
+
+BRAND [STR]:
+- Best qualification rate in account: 14.3%
+- Lowest qualified CPL: $736
+- Decision: Small increase to $1,000/month — never cut brand budget
+
+TRUE QUALIFIED LEAD DEFINITION:
+- CTM 4-5 star rating AND duration >= 120 seconds AND answered
+- Google Ads 'conversions' are NOT qualified leads
+- Always use CTM data as truth — never Google's conversion count
+
+PHASE 1 — ADVISORY ONLY:
+- Thai Nguyen must approve ALL budget changes before execution
+- Never say 'execute' or 'implement' — always say 'recommend for Thai approval'
 `
     } else if (['03', '11', '18', '20'].includes(agentId)) {
       // All marketing/admissions agents get CTM quality data for cross-referencing
