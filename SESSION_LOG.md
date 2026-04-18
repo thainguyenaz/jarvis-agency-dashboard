@@ -84,3 +84,20 @@ Admissions-tag keywords checked (case-insensitive substring match): `qualified`,
 Permanent fix tracked for Monday: (1) read CTM's native rating field as primary signal in `computeQualityScore`, (2) separate "tagged-qualified" from "duration-qualified" in the report, (3) make duration-qualified calls NOT feed the qualified-CPL ratio.
 
 Related action: Thai to notify Adam Leonard that admissions tagging has been stale since Apr 12 and must resume for the report to be meaningful going forward.
+
+### 2026-04-18 — User-add email fire-and-forget fix
+
+Root cause: `POST /api/admin/users` called `transporter.sendMail(...)` fire-and-forget (no `await`, only `.then/.catch` for logging) and returned `email_sent` based on whether `SMTP_USER` env var existed — not whether delivery actually succeeded. Admin UI would show "email sent" even on later bounce. Surfaced during the 2026-04-17 Megan Pitcher credential-email miss diagnostic.
+
+Fix shipped (jarvis-workspace commit `5f6ac3d`, single file: `jarvis-api/src/routes/admin.js`): awaited `sendMail` inside try/catch. Response now returns `email_sent` (true only on resolved send), `email_message_id` (M365 messageId on success, else null), `email_error` (short safe error string on failure, else null). HTTP status is now 201 Created on success. User creation is NOT rolled back on email failure — admin sees row inserted + email failed and can relay credentials manually (as Thai did for Megan).
+
+Verification — live test with a throwaway `testfire*` user against the production VPS (id 8, deleted immediately after via admin DELETE endpoint, table returned to original 5 rows):
+- HTTP 201
+- `email_sent: true`
+- `email_message_id: "<652da798-4c19-4766-242b-0caf767917d9@desertrecoverycenters.com>"` — real M365 messageId
+- `email_error: null`
+- pm2 jarvis-api restart clean (restart #70, no startup errors)
+
+Related: Megan's missing email (2026-04-17) was not caused by this bug. Send actually succeeded at the SMTP hop (`[ADMIN] Welcome email sent to getthepitch@gmail.com` in logs) and landed in Gmail Spam due to plaintext temporary password in the template + probable SPF/DKIM misalignment on M365 → gmail.com delivery. That's Monday scope.
+
+Monday scope remaining (explicitly NOT done today): (1) switch to token-based password-set link instead of plaintext password in the email body, (2) new frontend `/set-password/[token]` page, (3) `password_reset_tokens` table, (4) audit SPF/DKIM/DMARC for the M365 sender identity against desertrecoverycenters.com, (5) email template rewrite to remove spam-triggering patterns (bright accent colors, monospace password box, "TEMPORARY PASSWORD" label). Template, SMTP config, DB schema, and dashboard frontend unchanged by this fix.
