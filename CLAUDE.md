@@ -86,6 +86,52 @@ All 6 agents (01, 03, 07, 11, 18, 20) must receive:
   - Direct/Unknown: 4 leads at $0 CPL
 - Target: 100 qualified leads/month by Day 90
 
+## OCCUPANCY-BASED BUDGET CONTROL (APRIL 17 2026 — ACTIVE RULE, Thai-approved)
+
+This is the SINGLE SOURCE OF TRUTH for budget posture. Any answer about budgets, zones, occupancy-linked spend, or campaign allocation must reference this rule. Do not invent zone schemes. Do not reference old BELOW_70/MAINTAIN rules. Do not reference $1,200 floors, $500 floors, PMax $3K monthly hold, or proportional/monthly-divided-by-30 math — all DELETED.
+
+MONITOR:
+- Runs 8:10am AZ daily via occupancy-budget-monitor.js
+- Targets ACTUAL PROJECTED SPEND, not budget cap sums
+- Never auto-executes. Every proposal goes to Thai via Telegram for approval.
+
+ZONES:
+- BELOW_50 (< 50% occupancy) → queue INCREASE proposals to zone target; $65K/month actual spend target
+- HOLD (50-89% occupancy) → do nothing; no proposals, no Telegram alerts; log only
+- ABOVE_90 (>= 90% occupancy) → queue DECREASE proposals to zone target; $50K/month actual spend baseline
+
+FIXED ALLOCATION (PMax permanently excluded):
+- Addiction Treatment: 65%
+- Mental Health: 32%
+- Brand: 3%
+
+ZONE CAP TARGETS:
+- BELOW_50: AT=$1,875/day, MH=$1,250/day, Brand=$25/day
+- ABOVE_90: AT=$1,442/day, MH=$961/day, Brand=$20/day
+
+FLOORS: NONE. The old $1,200 AT/MH floors and $500 Brand floor are REMOVED.
+
+PAUSED CAMPAIGNS (do not touch without Thai's explicit approval):
+- Detox — permanently paused. Broken economics ($28,942 qualified CPL over 17 months, $121,184 spend, 1 qualified lead / 90 days).
+- PMax — permanently paused. Excluded from allocation. No $3K monthly hold. No redistribution.
+
+CURRENT STATE (as of April 17, 2026):
+- Occupancy: 60% (12/20 beds) → HOLD zone
+- Live daily budgets: AT=$1,875, MH=$1,250, Brand=$25, PMax=PAUSED, Detox=PAUSED
+- Monitor last run: action=none (correct for HOLD)
+
+APPROVAL GATES:
+- Budget changes > 30% of current → require Thai approval
+- Any bid strategy change → require Thai approval
+- Any PMax or Detox unpause → require Thai approval
+- Any new campaign launch → require Thai approval
+- Learning phase active on a campaign → no changes
+
+### Config files
+- Guardrails: `/home/openclaw/jarvis-marketing-agency/config/budget-guardrails.json`
+- Monitor: `/home/openclaw/jarvis-marketing-agency/src/monitors/occupancy-budget-monitor.js`
+- Wired in: `/home/openclaw/jarvis-marketing-agency/src/cmo-entry.js`
+
 ## DATA ARCHITECTURE
 - VPS: 93.188.166.239 (Hostinger Ubuntu)
 - All API calls from Vercel must use public VPS IP — never localhost
@@ -140,17 +186,10 @@ Build as exact match only:
 - Tablets + Connected TV: $521, zero conversions
 - Detox Treatment [STR]: $121,184 all-time, zero qualified leads — stay paused
 
-## BUDGET REALLOCATION PLAN (pending Thai approval for execution)
-- Mental Health [STR]: $20,551 → $14,000 (cut phrase match waste)
-- Addiction Treatment [STR]: $19,026 → $12,000 (same)
-- New Luxury Exact Match Campaign: $0 → $3,000 TEST
-- Glendale Occupancy Campaign (men's residential): $0 → $1,000 TEST
-- Tricare/Military Campaign: $0 → $500 TEST
-- PMax: $3,974 → $3,000 (hold, CTM signals live Apr 17)
-- Brand [STR]: $763 → $1,000
-- Recovery.com optimization: $0 → $2,000
-- GBP Optimization: $0 → $1,500
-- Detox [STR]: STAY PAUSED
+## BUDGET REALLOCATION PLAN (SUPERSEDED April 17, 2026)
+The previous reallocation plan (PMax $3K hold, MH $14K exact match, AT $12K exact match,
+new test campaigns) is DELETED. Budget posture is now governed exclusively by the
+OCCUPANCY-BASED BUDGET CONTROL rule above. PMax and Detox are PERMANENTLY PAUSED.
 
 ## CTM OFFLINE CONVERSION UPLOAD (built April 10, 2026)
 - Status: DRY RUN active — go-live April 17, 2026
