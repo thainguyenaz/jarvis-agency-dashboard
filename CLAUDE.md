@@ -130,10 +130,8 @@ PAUSED CAMPAIGNS (do not touch without Thai's explicit approval):
 - Detox — permanently paused. Broken economics ($28,942 qualified CPL over 17 months, $121,184 spend, 1 qualified lead / 90 days).
 - PMax — permanently paused. Excluded from allocation. No $3K monthly hold. No redistribution.
 
-CURRENT STATE (as of April 17, 2026):
-- Occupancy: 60% (12/20 beds) → HOLD zone
-- Live daily budgets: AT=$1,875, MH=$1,250, Brand=$25, PMax=PAUSED, Detox=PAUSED
-- Monitor last run: action=none (correct for HOLD)
+CURRENT STATE:
+Live occupancy, bed count, zone, live daily budgets, and monitor run status are read from Kipu census API and Google Ads API at runtime and injected into agent prompts via buildLiveOpsBlock() (lib/jarvis-data-server.ts). Do NOT hardcode current-state values in this doc — they will drift and conflict with the live-injected data. For live values, query any dashboard agent or see /dashboard/monitor-log.
 
 APPROVAL GATES:
 - Budget changes > 30% of current → require Thai approval

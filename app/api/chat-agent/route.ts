@@ -154,10 +154,8 @@ PAUSED CAMPAIGNS (do not touch without Thai's explicit approval):
 - Detox — permanently paused. Broken economics ($28,942 qualified CPL over 17 months, $121,184 spend, 1 qualified lead / 90 days).
 - PMax — permanently paused. Excluded from allocation. No $3K monthly hold. No redistribution.
 
-CURRENT STATE (as of April 17, 2026):
-- Occupancy: 60% (12/20 beds) → HOLD zone
-- Live daily budgets: AT=$1,875, MH=$1,250, Brand=$25, PMax=PAUSED, Detox=PAUSED
-- Monitor last run: action=none (correct for HOLD)
+CURRENT STATE:
+- Live occupancy, bed count, zone, budgets, and monitor run status are injected at runtime via buildLiveOpsBlock() in lib/jarvis-data-server.ts and prepended to this prompt as the liveOpsBlock section. Refer to the LIVE OPERATIONAL DATA section above for current values. Do NOT hardcode occupancy percentages, bed counts, or daily budget amounts in this rule block — they will drift.
 
 APPROVAL GATES:
 - Budget changes > 30% of current → require Thai approval
