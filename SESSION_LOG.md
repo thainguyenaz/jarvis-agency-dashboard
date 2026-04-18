@@ -56,3 +56,19 @@
 - Agent 07 memory: 7-answer verification battery — all MATCH
 - Monitor Log: curl returned HTTP 200 with runs=5, hold_count_30d=1
 - Approvals: end-to-end test with insert/deny/cleanup cycle
+
+---
+
+## 2026-04-18 (post-session) — Bed board accuracy fixes + fake overnight cron disabled
+
+**Bed board split** — Changed outpatient census display from single "Indian School (PHP/IOP)" line to separate Phoenix PHP and Phoenix IOP counts. Kipu returns `program` field on every patient — aggregator in kipu-sync.js was ignoring it. Now splits on program value (PHP, IOP). Updated FACILITIES constant in admissions.agent.js. Kipu location matching keywords (`indian school`, `phoenix`) unchanged — Kipu's internal name is still "Indian School."
+
+**TMS not displayed** — TMS is a concurrent modality, not a census bucket. Kipu `/api/patients/census` does not surface TMS — it's tracked in treatment plans / scheduling. Bed board includes a footer: "TMS tracked separately in Kipu treatment plans — not in census feed." Do NOT add a "Phoenix TMS: 0" line — it would fabricate data. Separate Kipu investigation needed if TMS census display is required.
+
+**Test patient filter upgraded** — TEST2025-118 was leaking into outpatient census as a phantom IOP count, inflating census by 1. `isTestPatient()` in kipu-sync.js (and admissions.agent.js) now also strips patients whose MR starts with "TEST" (case-insensitive). Real outpatient census today was 7 PHP / 0 IOP, not 8.
+
+**Fake overnight report cron disabled** — `/home/openclaw/.openclaw/workspace/tools/report_marketing_phase1.py` was fabricating "kept working overnight in Phase 1 read-only mode" every morning with invented commit hashes and stale March snapshot file counts. Cron line commented out in user crontab (script preserved on disk). Phase 1 read-only was NOT actually violated — the script was lying.
+
+**Pre-existing issues surfaced, not fixed tonight**:
+- Residential patients are bucketed by location_name regex but Kipu also sets `program = "Residential - Church" / "Residential - Frier"` — redundant but consistent, no fix needed
+- MEMORY.md index line about Kipu API returning "empty 200s, HMAC secret missing" was stale and has been updated — API returns real data now
