@@ -65,6 +65,16 @@ CONFIRMED NEGATIVES — ADD TO ALL CAMPAIGNS:
 - valley psychiatric hospital (competitor name, $65 spent, 0 conversions)
 - crossroads counseling scottsdale (competitor name — note: 1 conversion but competitor traffic)
 
+NEGATIVE KEYWORD EXECUTION LOG:
+- April 17, 2026: Thai added 10 data-verified negatives to Google Ads at the campaign level for Addiction Treatment [STR], Mental Health Treatment [STR], and Brand [STR] — 30 total negative keyword entries.
+- Match types applied: broad (therapist, therapists near me); phrase ("online counseling", "over the phone counseling", "anger management counseling", "substance abuse counselor", "drug abuse counselor", "forensic psychiatric evaluation"); exact ([redemption psychiatry], [valley psychiatric hospital]).
+- NOT added due to Striventa-managed pre-existing close variant: "alcohol screening with a licensed counselor" (Striventa had "complete alcohol screening with a licensed counselor" exact-match already in place on Addiction Treatment).
+- Campaign-level scope: these negatives apply to all ad groups within each of the 3 named campaigns. PMax and Detox Treatment [STR] are paused and were NOT touched.
+- Historical baseline: Striventa managed an extensive negative keyword list prior to April 17 covering hotlines, 12-step, gambling terms, competitor names, physical addresses, Medicaid searches, and free-service terms. Thai's April 17 additions target an outpatient-counselor-seeker and mental-health-provider-search gap that the baseline missed.
+- Verification method: Thai manually verified landing in Google Ads UI on April 17, 2026. Screenshots preserved. Total added: 30 negative keyword entries across 3 campaigns.
+- Impact expectation: prevents ~$500-$3,000/year of documented zero-conversion spend and reallocates impression share to high-intent terms.
+- Agent 07 guidance: when analyzing search term reports going forward, treat the 10 added negatives as CLOSED (do not re-recommend them). If search term report shows waste on OTHER terms not on the negative list, flag for Thai approval before adding.
+
 DO NOT ADD AS NEGATIVES — DATA SHOWS THESE CONVERT:
 - mental hospital, mental hospital phoenix, mental hospitals near me (9 conversions at $422 CPA — high-value cluster)
 - inpatient psychiatric hospital phoenix (2 conversions — residential intent confirmed)

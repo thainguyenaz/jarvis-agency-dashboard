@@ -37,6 +37,21 @@ Hardcoded into BEHAVIORAL_HEALTH_EXPERTISE in app/api/chat-agent/route.ts.
 - dual diagnosis psychiatrist Arizona
 - luxury psychiatric care Scottsdale
 
+### NEGATIVE KEYWORD EXECUTION LOG (April 17, 2026)
+
+Thai manually added 10 data-verified negatives to 3 active Google Ads campaigns (Addiction Treatment [STR], Mental Health Treatment [STR], Brand [STR]) at the campaign level — 30 total entries. Source: April 12, 2026 search term analysis ($12,781 / 421 terms / 6-month lookback).
+
+Negatives added (same 10 to each of 3 campaigns):
+- Broad match: therapist, therapists near me
+- Phrase match: "online counseling", "over the phone counseling", "anger management counseling", "substance abuse counselor", "drug abuse counselor", "forensic psychiatric evaluation"
+- Exact match: [redemption psychiatry], [valley psychiatric hospital]
+
+Deliberately NOT added: "alcohol screening with a licensed counselor" — Striventa had a close variant exact-match already in place.
+
+Baseline context: Striventa managed a comprehensive negative keyword list prior to April 17 (hotlines, 12-step, gambling, competitors, addresses, Medicaid, free-service terms). These additions target an outpatient-counselor-seeker gap the baseline missed.
+
+Agents must treat these 10 negatives as CLOSED — do not re-recommend them. New negatives require Thai approval before adding.
+
 ---
 
 # JARVIS AGENCY DASHBOARD — HARDCODED DECISIONS LOG
