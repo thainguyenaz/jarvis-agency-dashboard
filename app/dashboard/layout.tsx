@@ -12,6 +12,7 @@ const NAV_ITEMS = [
   { href: '/dashboard/qualified-leads', label: 'QUALIFIED LEADS', icon: '⭐' },
   { href: '/dashboard/agents', label: 'AGENTS', icon: '🤖' },
   { href: '/dashboard/approvals', label: 'APPROVALS', icon: '✅' },
+  { href: '/dashboard/monitor-log', label: 'MONITOR LOG', icon: '🔔' },
   { href: '/dashboard/chat', label: 'AGENT CHAT', icon: '💬' },
 ]
 
@@ -72,6 +73,7 @@ export default function DashboardLayout({
             { href: '/dashboard/qualified-leads', label: '⭐' },
             { href: '/dashboard/agents', label: '🤖' },
             { href: '/dashboard/approvals', label: '✅' },
+            { href: '/dashboard/monitor-log', label: '🔔' },
             { href: '/dashboard/chat', label: '💬' },
             ...(isAdmin ? [{ href: '/dashboard/admin', label: '🔒' }] : []),
           ].map(item => (
