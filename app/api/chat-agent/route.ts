@@ -419,6 +419,13 @@ export async function POST(req: Request) {
       return null
     })
 
+    // Authoritative live-ops block (census + budget caps) — prepended to every
+    // agent's contextBlock so it wins over any stale numbers in static persona
+    // text or OCCUPANCY_BUDGET_RULE. Do NOT move this below agent-specific
+    // contextBlock assignments — those do `contextBlock = '...'` (not +=) and
+    // would overwrite the block if placed first.
+    const liveOpsBlock = (serverData as any)?.liveOpsBlock || ''
+
     if (agentId === '01') {
       // Use server-side data, fall back to client context
       const p = serverData?.performance || context?.performance
@@ -775,7 +782,7 @@ CTM CALL QUALITY DATA (30d — for cross-reference):
       }
     }
 
-    const systemPrompt = `${persona}${contextBlock}
+    const systemPrompt = `${persona}${liveOpsBlock}${contextBlock}
 
 You are speaking directly to Thai Nguyen, the CEO. Be direct and specific.
 Reference actual numbers when relevant. Use headers with --- separators and

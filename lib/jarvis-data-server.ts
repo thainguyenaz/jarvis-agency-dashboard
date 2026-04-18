@@ -27,6 +27,7 @@ const SQLITE_SOURCES: Record<string, SourceDef> = {
   kipu:            { source: 'KIPU',       endpoint: 'census',        label: 'Kipu' },
   qualifiedLeadsDeep: { source: 'ctm',  endpoint: 'qualified-leads-deep-30d', label: 'QualifiedLeadsDeep' },
   ctmSummary:      { source: 'CTM',        endpoint: 'summary',       label: 'CTMSummary' },
+  budgetCaps:      { source: 'GOOGLE_ADS', endpoint: 'budget_caps',   label: 'BudgetCaps' },
 }
 
 const API_ENDPOINTS: Record<string, string> = {
@@ -39,6 +40,7 @@ const API_ENDPOINTS: Record<string, string> = {
   kipu:            '/api/kipu/census',
   qualifiedLeadsDeep: '/api/ctm/qualified-leads-deep?days=30',
   ctmSummary:      '/api/ctm/summary',
+  budgetCaps:      '/api/google-ads/budget-caps',
 }
 
 let _token: string | null = null
@@ -139,6 +141,10 @@ export async function getContext(agentId?: string) {
   const sourceLog = Object.entries(sources).map(([k, v]) => `${k}=${v}`).join(', ')
   console.log(`[AGENT-${agentId || '??'}] Data: ${sourceLog}`)
 
+  const census = data.kipu || null
+  const budgetCaps = data.budgetCaps || null
+  const liveOpsBlock = buildLiveOpsBlock(census, budgetCaps)
+
   return {
     performance: data.adsPerf || null,
     performance30: data.adsPerf30 || null,
@@ -147,8 +153,49 @@ export async function getContext(agentId?: string) {
     campaignQuality: data.campaignQuality || null,
     campaignHistory: data.campaignHistory || null,
     hubspot: data.hubspot || null,
-    census: data.kipu || null,
+    census,
+    budgetCaps,
+    liveOpsBlock,
     qualifiedLeadsDeep: data.qualifiedLeadsDeep || null,
     sources,
   }
+}
+
+function buildLiveOpsBlock(census: any, budgetCaps: any): string {
+  const lines: string[] = []
+  lines.push('')
+  lines.push('═══ LIVE OPERATIONAL DATA — AUTHORITATIVE, OVERRIDES ANY STATIC TEXT ═══')
+  lines.push('Any number elsewhere in this prompt that conflicts with the values below is STALE — use these.')
+
+  if (census && typeof census.occupancyPct === 'number') {
+    const occ = census.occupiedBeds ?? '?'
+    const total = (census.occupiedBeds ?? 0) + (census.availableBeds ?? 0) || '?'
+    const zone = census.occupancyPct < 50 ? 'BELOW_50' : census.occupancyPct >= 90 ? 'ABOVE_90' : 'HOLD'
+    lines.push('')
+    lines.push(`CURRENT LIVE OCCUPANCY: ${census.occupancyPct}% (${occ}/${total} beds) — zone: ${zone}`)
+    const locs = Array.isArray(census.locations) ? census.locations : []
+    for (const l of locs) {
+      const cap = l.beds == null ? 'PHP/IOP' : `${l.occupied}/${l.beds}`
+      lines.push(`  - ${l.name}: ${cap}`)
+    }
+  } else {
+    lines.push('')
+    lines.push('CURRENT LIVE OCCUPANCY: unavailable — say so; do not guess.')
+  }
+
+  if (budgetCaps && Array.isArray(budgetCaps.campaigns)) {
+    lines.push('')
+    lines.push(`CURRENT LIVE BUDGET CAPS (source: Google Ads API, fetched_at=${budgetCaps.fetched_at || 'unknown'}):`)
+    for (const c of budgetCaps.campaigns) {
+      const b = c.daily_budget == null ? `[${c.status}]` : `$${c.daily_budget}/day [${c.status}]`
+      lines.push(`  - ${c.name}: ${b}`)
+    }
+  } else {
+    lines.push('')
+    lines.push('CURRENT LIVE BUDGET CAPS: unavailable — say so; do not cite hardcoded zone targets as current.')
+  }
+
+  lines.push('═══ END LIVE OPERATIONAL DATA ═══')
+  lines.push('')
+  return lines.join('\n')
 }
