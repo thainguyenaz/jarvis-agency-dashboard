@@ -101,3 +101,19 @@ Verification — live test with a throwaway `testfire*` user against the product
 Related: Megan's missing email (2026-04-17) was not caused by this bug. Send actually succeeded at the SMTP hop (`[ADMIN] Welcome email sent to getthepitch@gmail.com` in logs) and landed in Gmail Spam due to plaintext temporary password in the template + probable SPF/DKIM misalignment on M365 → gmail.com delivery. That's Monday scope.
 
 Monday scope remaining (explicitly NOT done today): (1) switch to token-based password-set link instead of plaintext password in the email body, (2) new frontend `/set-password/[token]` page, (3) `password_reset_tokens` table, (4) audit SPF/DKIM/DMARC for the M365 sender identity against desertrecoverycenters.com, (5) email template rewrite to remove spam-triggering patterns (bright accent colors, monospace password box, "TEMPORARY PASSWORD" label). Template, SMTP config, DB schema, and dashboard frontend unchanged by this fix.
+
+---
+
+### 2026-04-18 — Sync counter fix (Option A)
+
+Root cause: getSyncStatus() in sync-engine.js counted TTL expiry across ALL rows in sync_cache, including 4 ghost duplicates (uppercase/lowercase twins of the same source) and 8 runtime-cache orphans (ad-hoc endpoints like /budget-caps, /performance_14, /quality-90d, KIPU/occupancy that are intentional short-TTL runtime caches, not nightly sync operations). Last night's real result was 25/25 operations succeeded, 0 failures, but the Telegram report said "12 failed."
+
+Fix shipped: getSyncStatus() now filters by SCHEDULED_NIGHTLY_SOURCES list (QBO/overview, GOOGLE_ADS/performance, GA4/overview, HUBSPOT/pipeline, CTM/calls, KIPU/census) and only counts those for the Telegram "cached/failed" numbers. Runtime cache rows and ghost duplicates are still stored in sync_cache but no longer pollute the counter. A missing scheduled source (row absent entirely) now correctly counts as "failed" — that's a real failure we DO want to know about.
+
+Kept intact: the 4 ghost duplicates and 8 runtime orphans (including /budget-caps from tonight's T1 live-injection work) remain in sync_cache and continue to serve their runtime purpose. No cache data was deleted.
+
+Tomorrow 2:00 AM proof-of-fix: Telegram report should show "X sources cached / 0 sources failed" where X = number of 6 scheduled sources that ran fresh (expected: 6).
+
+Monday cleanup residuals (not urgent):
+- 4 ghost rows with uppercase/lowercase casing duplicates could be consolidated (pick a canonical casing, delete the twin)
+- 8 runtime orphan rows could get longer TTLs or cron schedules if used frequently
