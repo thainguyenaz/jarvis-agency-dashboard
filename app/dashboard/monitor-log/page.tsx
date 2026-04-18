@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useState, useCallback } from 'react'
+import { jarvisFetch } from '@/lib/api'
 
 type Run = {
   id: number
@@ -82,19 +83,9 @@ export default function MonitorLogPage() {
   const load = useCallback((zone: ZoneFilter) => {
     setLoading(true)
     setError('')
-    const token = typeof window !== 'undefined' ? localStorage.getItem('jarvis_token') : null
     const qs = new URLSearchParams({ limit: '30' })
     if (zone !== 'ALL') qs.set('zone', zone)
-    fetch(`/api/proxy/api/monitor-log?${qs.toString()}`, {
-      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-    })
-      .then(async r => {
-        if (!r.ok) {
-          const text = await r.text().catch(() => '')
-          throw new Error(`HTTP ${r.status}${text ? `: ${text.slice(0, 160)}` : ''}`)
-        }
-        return r.json()
-      })
+    jarvisFetch(`/api/monitor-log?${qs.toString()}`)
       .then((d: MonitorLogResponse) => setData(d))
       .catch(e => setError(e.message || String(e)))
       .finally(() => setLoading(false))
