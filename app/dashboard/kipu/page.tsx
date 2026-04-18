@@ -78,28 +78,6 @@ export default function CensusPage() {
     ['church', 'frier'].some(f => (p.location || '').toLowerCase().includes(f))
   )
 
-  // Outpatient patients (Indian School)
-  const outpatientPatients = allPatients.filter((p: any) =>
-    (p.location || '').toLowerCase().includes('indian')
-  )
-
-  // PHP/IOP/OP/TMS counts from program field
-  function countProgram(keyword: string): number {
-    return outpatientPatients.filter((p: any) =>
-      (p.program || '').toLowerCase().includes(keyword.toLowerCase())
-    ).length
-  }
-
-  const phpCount = countProgram('php') || outpatientPatients.filter((p: any) =>
-    (p.program || '').toLowerCase().includes('partial')
-  ).length
-  const iopCount = countProgram('iop') || countProgram('intensive')
-  const opCount = countProgram(' op') || countProgram('outpatient')
-  const tmsCount = countProgram('tms') || countProgram('neurostar')
-
-  // If program field doesn't differentiate, show total outpatient as PHP
-  const phpDisplay = phpCount || (iopCount === 0 && opCount === 0 ? outpatientPatients.length : phpCount)
-
   // Use confirmed direct fields from API
   const churchCount = census.church || rtcPatients.filter((p: any) => (p.location || '').toLowerCase().includes('church')).length
   const frierCount = census.frier || rtcPatients.filter((p: any) => (p.location || '').toLowerCase().includes('frier')).length
@@ -108,10 +86,11 @@ export default function CensusPage() {
   const rtcCapacity = 20
   const rtcPct = census.occupancyPct || pct(rtcTotal, rtcCapacity)
 
-  // Location details from locations array
+  // Location details from locations array (new shape: key/label/count/total/type)
   const locations: any[] = census.locations || []
-  const indianSchool = locations.find((l: any) => l.name?.toLowerCase().includes('indian'))
-  const moody = locations.find((l: any) => l.name?.toLowerCase().includes('moody'))
+  const outpatients = locations.filter((l: any) => l.type === 'outpatient')
+  const outpatientTotal = outpatients.reduce((sum: number, l: any) => sum + (l.count || 0), 0)
+  const moody = locations.find((l: any) => (l.label || l.name || '').toLowerCase().includes('moody'))
   const churchPct = pct(churchCount, RTC_BEDS)
   const frierPct = pct(frierCount, RTC_BEDS)
 
@@ -224,14 +203,9 @@ export default function CensusPage() {
         <div className="text-jarvis-dim text-xs font-mono mb-4 opacity-60">
           4160 N 108th Ave · Headcount only · No bed capacity limit
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {[
-            { label: 'PHP', name: 'Partial Hospitalization', count: phpDisplay, live: true },
-            { label: 'IOP', name: 'Intensive Outpatient', count: iopCount, live: false },
-            { label: 'OP', name: 'Outpatient', count: opCount, live: false },
-            { label: 'TMS', name: 'NeuroStar TMS', count: tmsCount, live: false },
-          ].map((prog, i) => (
-            <div key={i} className={`border rounded-lg p-4 text-center ${
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {outpatients.map((prog: any) => (
+            <div key={prog.key} className={`border rounded-lg p-4 text-center ${
               prog.count > 0 ? 'border-jarvis-green border-opacity-50' : 'border-jarvis-border'
             }`}>
               <div className={`text-xs font-mono mb-1 font-bold ${
@@ -240,18 +214,13 @@ export default function CensusPage() {
               <div className={`text-4xl font-bold font-mono mb-1 ${
                 prog.count > 0 ? 'text-jarvis-cyan' : 'text-jarvis-dim'
               }`}>{prog.count}</div>
-              <div className="text-xs font-mono text-jarvis-dim opacity-70">{prog.name}</div>
-              {!prog.live && prog.count === 0 && (
-                <div className="text-jarvis-dim text-xs font-mono mt-2 opacity-40 italic">
-                  newly launched
-                </div>
-              )}
+              <div className="text-xs font-mono text-jarvis-dim opacity-70">patients</div>
             </div>
           ))}
         </div>
-        {indianSchool && (
+        {outpatients.length > 0 && (
           <div className="text-jarvis-dim text-xs font-mono mt-3 opacity-50">
-            Source: Kipu Indian School location · {indianSchool.occupied} total outpatient patients
+            Source: Kipu Phoenix outpatient · {outpatientTotal} total outpatient patients
           </div>
         )}
       </div>

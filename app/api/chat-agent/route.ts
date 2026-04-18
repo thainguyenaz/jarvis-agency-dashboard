@@ -451,8 +451,10 @@ export async function POST(req: Request) {
         .find((l: any) => l.name?.toLowerCase().includes('church'))
       const frierLoc = (census?.locations || census?.byLocation || [])
         .find((l: any) => l.name?.toLowerCase().includes('frier'))
-      const indianLoc = (census?.locations || census?.byLocation || [])
-        .find((l: any) => l.name?.toLowerCase().includes('indian'))
+      const phpLoc = (census?.locations || census?.byLocation || [])
+        .find((l: any) => l.key === 'phoenix_php' || l.label?.toLowerCase().includes('php'))
+      const iopLoc = (census?.locations || census?.byLocation || [])
+        .find((l: any) => l.key === 'phoenix_iop' || l.label?.toLowerCase().includes('iop'))
 
       const ctmSummary = ctm?.summary || ctm
       const sd = ctmSummary?.score_distribution || {}
@@ -507,7 +509,8 @@ ${stlLine}`
 CENSUS (Kipu live):
 - Church RTC (Scottsdale, female): ${churchLoc?.occupied ?? '?'}/${churchLoc?.beds ?? '?'} beds (${churchLoc?.available ?? '?'} available)
 - Frier RTC (Glendale, male): ${frierLoc?.occupied ?? '?'}/${frierLoc?.beds ?? '?'} beds (${frierLoc?.available ?? '?'} available)
-- Indian School (PHP/IOP): ${indianLoc?.occupied ?? census?.indianSchool ?? '?'} patients
+- Phoenix PHP: ${phpLoc?.count ?? census?.phoenix_php ?? 0} patients
+- Phoenix IOP: ${iopLoc?.count ?? census?.phoenix_iop ?? 0} patients
 - Total census: ${census?.totalCensus ?? '?'} | Occupancy: ${census?.occupancyPct ?? '?'}%
 
 HUBSPOT PIPELINE:
