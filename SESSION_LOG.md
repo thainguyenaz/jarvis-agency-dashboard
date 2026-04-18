@@ -72,3 +72,15 @@
 **Pre-existing issues surfaced, not fixed tonight**:
 - Residential patients are bucketed by location_name regex but Kipu also sets `program = "Residential - Church" / "Residential - Frier"` — redundant but consistent, no fix needed
 - MEMORY.md index line about Kipu API returning "empty 200s, HMAC secret missing" was stale and has been updated — API returns real data now
+
+### 2026-04-18 — CTM daily report staleness banner (interim safety)
+
+Root cause discovered: Jarvis daily call quality report at 8:05 AM ignores CTM's native 1-5 star rating field and auto-scores by duration (>180s = 4★, >90s = 3★) in `src/integrations/ctm/connector.js::computeQualityScore`. Last admissions manual tag was 2026-04-12 — 5-6 days stale. Report has been claiming ~60 qualified leads/30d when admissions actually tagged 3. This has been artificially LOWERING reported CPL precisely when admissions stops tagging.
+
+Interim fix shipped (commit `398b7ae` on jarvis-marketing-agency main): staleness banner at top of Telegram report when `daysSinceLastAdmissionsTag > 2`. Banner text: "⚠️ TAGGING STALE — LAST ADMISSIONS TAG X DAYS AGO ... Treat CPL numbers as unreliable until admissions tagging resumes." File touched: `src/monitors/ctm-quality-monitor.js` (+48, -1). No changes to `computeQualityScore`, CPL math, connector, or any database. Verified by dry-run harness — banner rendered with "LAST ADMISSIONS TAG 5 DAYS AGO" as of Apr 18 16:28 UTC. pm2 jarvis-telegram restarted; `[CTM-QUALITY] Scheduled: Daily 8:05am Arizona` reconfirmed in logs.
+
+Admissions-tag keywords checked (case-insensitive substring match): `qualified`, `not qualified`, `voicemail`, `wrong number`, `follow up`, `admit`, `referral`. 30-day lookback window. If the lookup errors or returns zero calls, a softer fallback banner is used ("Could not verify admissions tag freshness"). If qualifiedCount === 0 AND missed5Star === 0, the report is still skipped entirely (pre-existing behavior preserved).
+
+Permanent fix tracked for Monday: (1) read CTM's native rating field as primary signal in `computeQualityScore`, (2) separate "tagged-qualified" from "duration-qualified" in the report, (3) make duration-qualified calls NOT feed the qualified-CPL ratio.
+
+Related action: Thai to notify Adam Leonard that admissions tagging has been stale since Apr 12 and must resume for the report to be meaningful going forward.
