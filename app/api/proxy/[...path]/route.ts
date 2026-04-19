@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-const VPS_BASE = 'http://93.188.166.239:3002'
+const VPS_BASE = 'https://api.desertrecoverycenters.com'
 
 export async function GET(
   req: NextRequest,

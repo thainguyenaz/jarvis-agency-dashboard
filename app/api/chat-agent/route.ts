@@ -407,7 +407,7 @@ export async function OPTIONS() {
   return new Response(null, { status: 200, headers: corsHeaders })
 }
 
-const VPS_BASE = 'http://93.188.166.239:3002'
+const VPS_BASE = 'https://api.desertrecoverycenters.com'
 
 export async function POST(req: Request) {
   try {

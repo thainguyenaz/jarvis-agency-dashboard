@@ -148,7 +148,7 @@ APPROVAL GATES:
 ## DATA ARCHITECTURE
 - VPS: 93.188.166.239 (Hostinger Ubuntu)
 - All API calls from Vercel must use public VPS IP — never localhost
-- jarvis-data-server.ts VPS_BASE = 'http://93.188.166.239:3002'
+- jarvis-data-server.ts VPS_BASE = 'https://api.desertrecoverycenters.com' (nginx HTTPS proxy → port 3002)
 - SQLite first, API fallback for all data fetches
 - SQLite DB: /home/openclaw/data/jarvis-cache.db
 
@@ -254,7 +254,7 @@ OCCUPANCY-BASED BUDGET CONTROL rule above. PMax and Detox are PERMANENTLY PAUSED
 3. Agent/cron/Telegram changes → ALWAYS go in jarvis-marketing-agency
 4. NEVER commit frontend code to jarvis-workspace
 5. NEVER commit API routes to jarvis-agency-dashboard
-6. NEVER use localhost:3002 in jarvis-agency-dashboard — use http://93.188.166.239:3002
+6. NEVER use localhost:3002 in jarvis-agency-dashboard — use https://api.desertrecoverycenters.com (nginx HTTPS proxy to VPS port 3002). Direct HTTP to 93.188.166.239:3002 causes mixed-content block in browsers.
 7. command-center is deprecated — do not add features or fix bugs there
 
 ### PM2 Process Map
