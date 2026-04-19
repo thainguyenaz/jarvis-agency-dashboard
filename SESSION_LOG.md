@@ -117,3 +117,15 @@ Tomorrow 2:00 AM proof-of-fix: Telegram report should show "X sources cached / 0
 Monday cleanup residuals (not urgent):
 - 4 ghost rows with uppercase/lowercase casing duplicates could be consolidated (pick a canonical casing, delete the twin)
 - 8 runtime orphan rows could get longer TTLs or cron schedules if used frequently
+
+---
+
+### 2026-04-19 — Dashboard auth fix: HTTPS proxy routing
+
+Root cause: jarvis-agency-dashboard hardcoded http://93.188.166.239:3002 (plain HTTP to VPS IP) in 3 source files (app/api/proxy/[...path]/route.ts, app/api/chat-agent/route.ts, lib/jarvis-data-server.ts). Modern browsers silently block HTTPS→HTTP requests (mixed-content). Dashboard served HTTPS from Vercel, tried to POST HTTP to VPS, browser killed the request before it left. Frontend displayed generic "Invalid credentials" because it couldn't distinguish blocked request from auth failure. Zero external login attempts reached jarvis-api today — smoking gun from morgan access logs.
+
+Fix shipped: replaced all 3 occurrences with https://api.desertrecoverycenters.com (pre-existing nginx HTTPS proxy, valid TLS cert, verified end-to-end returning correct 401 on bad creds and 200 on good creds). Also updated CLAUDE.md doctrine line ~257 to forbid the old plain-HTTP pattern.
+
+Zero VPS-side changes. Backend, users table, auth logic, nginx config — all unchanged. This was purely a frontend URL mismatch.
+
+Remaining cleanup: caddy.service on VPS failed 15h ago with "address already in use :80" (harmless leftover, nginx owns port). Worth disabling caddy.service to silence the failed-unit log noise. Not urgent.
