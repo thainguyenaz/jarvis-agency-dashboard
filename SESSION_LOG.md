@@ -129,3 +129,21 @@ Fix shipped: replaced all 3 occurrences with https://api.desertrecoverycenters.c
 Zero VPS-side changes. Backend, users table, auth logic, nginx config — all unchanged. This was purely a frontend URL mismatch.
 
 Remaining cleanup: caddy.service on VPS failed 15h ago with "address already in use :80" (harmless leftover, nginx owns port). Worth disabling caddy.service to silence the failed-unit log noise. Not urgent.
+
+### 2026-04-19 — CTM real scoring fix (shipped)
+
+Root cause (corrected understanding): Daily 8:05 AM report ignored CTM's native `sale` object (structured 7-category admissions disposition with 1-5 star rating) entirely. It read only `tag_list` and fell back to duration buckets for everything else. The Apr 18 claim that "admissions stopped tagging" was WRONG — admissions uses the `sale` field, not tag_list, with ~46% coverage. Jarvis was blind to this data stream.
+
+Fix shipped: computeQualityScore() now reads sale.score as primary signal, sale.name as label. Falls back to tag_list "qualified" only when sale is null. Duration heuristic is LAST RESORT and calls scored that way are marked `reviewed: false` and EXCLUDED from the qualified-CPL denominator.
+
+Report format changed: shows Qualified/Medicaid/Existing Client/Wrong Number/Spam/Dead Air breakdowns, plus an "Unreviewed so far" count. 30-day CPL denominator is admissions-reviewed qualified leads only. Staleness banner replaced with "ADMISSIONS REVIEW BACKLOG: X%" based on sale-coverage % of last 48h, only showing when backlog >30%.
+
+Memory corrected: entries #11 and #13 updated to reflect that admissions has been doing QA correctly all along — via the sale field, not tags.
+
+Impact: 30-day CPL numbers will shift significantly on tomorrow's 8:05 AM report. Expected direction: qualified counts shrink from duration-inflated highs, CPLs increase correspondingly but reflect REAL admissions dispositions for the first time.
+
+Files touched: `src/integrations/ctm/connector.js` (+72/-18 — new ADMISSIONS_DISPOSITIONS map, rewritten computeQualityScore returning {score, scoredBy, label, reviewed, disposition, isQualified, isReferable}; all four callers updated to use new object shape; backward-compatible `.qualityScore` access preserved). `src/monitors/ctm-quality-monitor.js` (full rewrite — generateDailyReport(options) now supports dryRun:true + date override; fetches 30-day per-campaign correlation direct from connector, joins cached Google Ads spend for CPL; sale-coverage backlog banner replaces tag-freshness banner).
+
+Dry-run 2026-04-18 diagnostics: yesterday 17 calls, 1 reviewed (Medicaid), 16 unreviewed, 0 admissions-qualified. 30-day 586 total / 271 reviewed / 315 unreviewed (54% backlog). 48h backlog 94% → banner fired. AT CPL $4,918 (5 admissions-qualified, $24,591 spend). MH CPL $5,427 (4 qualified, $21,709 spend). PMax / Brand / Detox — 0 admissions-qualified, flagged 🔴 NO QUAL LEADS. Before/after comparison vs cached API (cache still pre-fix until jarvis-api restart): AT 7→5, MH 4→4, PMax 1→0 — duration-scored calls correctly excluded.
+
+Related human action: Thai to update Adam on corrected understanding (previous message to him implied he was behind on tagging — he wasn't).
