@@ -236,6 +236,17 @@ Target qualified CPL < $1,500; any campaign over that is CRITICAL.
 Guardrails: max 2 changes per campaign per week, max 20% bid adjustment,
 budget increases over 30% require Thai approval, no changes during learning phase.
 Phase 1: Advise only. No execution without Thai approval.
+
+KEYWORD-LEVEL DATA NOW AVAILABLE (Phase 1 read-only):
+- /api/google-ads/search-terms — actual queries that triggered ads (last 7/30/90 days, spend-ranked)
+- /api/google-ads/keywords — keyword-level metrics with quality score, match type, cost, conversions
+- /api/google-ads/negative-keywords — current campaign + account-level negatives (so you don't recommend duplicates)
+
+When asked about 'wasted spend', 'search terms', 'keyword performance', or 'should we add negative X', call these endpoints first. Cite 'search term report (last 30d, cached Xh ago)' as source. Never recommend a negative keyword that already exists in the negative list. Use conversion data alongside CTM qualified-lead data — Google Ads native conversions include form fills and soft conversions; CTM admissions-qualified is the truth signal.
+
+Before recommending any negative keyword, call /api/google-ads/negative-keywords to check current exclusions. The following negatives were data-verified and added on 2026-04-17 across AT, MH, and Brand campaigns — treat this list as CLOSED and never re-recommend: therapist, therapists near me, online counseling, over the phone counseling, anger management counseling, substance abuse counselor, drug abuse counselor, forensic psychiatric evaluation, redemption psychiatry, valley psychiatric hospital.
+
+For search term analysis, cite the source timestamp from the endpoint's cached_at field (e.g., 'search term report, last 30 days, cached 2 hours ago'). Google Ads native conversions include form fills — for qualified-lead CPL use CTM admissions-reviewed data from fetchCampaignQualityCorrelation, not Google Ads conversion field.
 ${BEHAVIORAL_HEALTH_EXPERTISE}
 ${OCCUPANCY_BUDGET_RULE}
 
@@ -718,6 +729,83 @@ CTR: ${ps?.avg_ctr?.toFixed(2) ?? 'unknown'}%`
         contextBlock += `\n4-star: ${qs.by_score?.['4'] ?? 0} | 5-star: ${qs.by_score?.['5'] ?? 0}`
         contextBlock += `\nAvg duration: ${qs.avg_duration_qualified}s`
         contextBlock += `\nFiltered out: ${qs.filtered_out_short_duration} short (<2min), ${qs.filtered_out_unanswered} unanswered`
+      }
+
+      // ── Keyword-level data (search terms, keywords, negatives) ──────────
+      // Pre-fetches so the LLM has data to cite. Promise.allSettled so one
+      // endpoint failure doesn't kill the other two sections.
+      if (authHeader) {
+        const fetchJson = (url: string) =>
+          fetch(url, { headers: { Authorization: authHeader } })
+            .then(r => r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`)))
+        const kwResults = await Promise.allSettled([
+          fetchJson(`${VPS_BASE}/api/google-ads/search-terms?days=30`),
+          fetchJson(`${VPS_BASE}/api/google-ads/keywords?days=30`),
+          fetchJson(`${VPS_BASE}/api/google-ads/negative-keywords`),
+        ])
+        const [stRes, kwRes, negRes] = kwResults
+
+        // Search terms — top 25 by spend
+        contextBlock += `\n\n═══ SEARCH TERM REPORT (last 30 days) ═══`
+        if (stRes.status === 'fulfilled' && Array.isArray(stRes.value?.terms)) {
+          const st: any = stRes.value
+          contextBlock += `\nSource: /api/google-ads/search-terms | cached_at: ${st.cached_at || 'unknown'}`
+          contextBlock += `\nTotals: ${st.total_terms} terms, $${Number(st.total_spend || 0).toFixed(2)} spend, ${st.converting_terms} converting, $${Number(st.wasted_spend || 0).toFixed(2)} wasted (0-conv > $20)`
+          contextBlock += `\nTop 25 by spend:`
+          st.terms.slice(0, 25).forEach((t: any, i: number) => {
+            contextBlock += `\n  ${i + 1}. "${t.searchTerm}" — ${t.campaign || 'unknown'} | clicks ${t.clicks} | $${Number(t.spend || 0).toFixed(2)} | conv ${t.conversions}`
+          })
+        } else {
+          const reason = stRes.status === 'rejected' ? (stRes.reason?.message || 'unknown') : 'empty response'
+          contextBlock += `\n[search terms data unavailable: ${reason}]`
+        }
+
+        // Keywords — top 25 actionable (QS<7 OR 0 conv) by spend
+        contextBlock += `\n\n═══ KEYWORD-LEVEL QUALITY (last 30 days) ═══`
+        if (kwRes.status === 'fulfilled' && Array.isArray(kwRes.value?.keywords)) {
+          const kw: any = kwRes.value
+          const actionable = (kw.keywords as any[])
+            .filter(k => (k.qualityScore != null && k.qualityScore < 7) || k.conversions === 0)
+            .sort((a, b) => (b.spend || 0) - (a.spend || 0))
+            .slice(0, 25)
+          contextBlock += `\nSource: /api/google-ads/keywords | cached_at: ${kw.cached_at || 'unknown'}`
+          contextBlock += `\nTotals: ${kw.total_keywords} keywords, $${Number(kw.total_spend || 0).toFixed(2)} spend, ${kw.zero_conversion} with 0 conv & spend > $50`
+          contextBlock += `\nActionable subset (QS < 7 OR 0 conversions, top 25 by spend):`
+          actionable.forEach((k: any, i: number) => {
+            const qs = k.qualityScore != null ? k.qualityScore : 'N/A'
+            contextBlock += `\n  ${i + 1}. "${k.keyword}" [QS ${qs}] — ${k.campaign || 'unknown'} | $${Number(k.spend || 0).toFixed(2)} | conv ${k.conversions} | ctr ${Number(k.ctr || 0).toFixed(4)}`
+          })
+        } else {
+          const reason = kwRes.status === 'rejected' ? (kwRes.reason?.message || 'unknown') : 'empty response'
+          contextBlock += `\n[keywords data unavailable: ${reason}]`
+        }
+
+        // Negative keywords — deduped by term+match_type (campaign list is noisy with paused-campaign entries)
+        contextBlock += `\n\n═══ CURRENT NEGATIVE KEYWORD EXCLUSIONS ═══`
+        if (negRes.status === 'fulfilled') {
+          const neg: any = negRes.value
+          const uniqCamp = new Map<string, any>()
+          ;(neg.campaign_negatives || []).forEach((n: any) => {
+            const key = `${(n.keyword || '').toLowerCase()}|${n.match_type}`
+            if (!uniqCamp.has(key)) uniqCamp.set(key, n)
+          })
+          contextBlock += `\nSource: /api/google-ads/negative-keywords | cached_at: ${neg.cached_at || 'unknown'}`
+          contextBlock += `\nTotals: ${neg.total_campaign} raw campaign-level entries (dedup to ${uniqCamp.size} unique), ${neg.total_account} account-level (shared sets)`
+          contextBlock += `\nDO NOT recommend any term below — they are already excluded:`
+          contextBlock += `\nCampaign-level (unique by term+match_type):`
+          Array.from(uniqCamp.values()).forEach((n: any) => {
+            contextBlock += `\n  "${n.keyword}" (${n.match_type}, campaign-level)`
+          })
+          contextBlock += `\nAccount-level (shared sets):`
+          ;(neg.account_negatives || []).forEach((n: any) => {
+            contextBlock += `\n  "${n.keyword}" (${n.match_type}, account-level via ${n.shared_set || 'shared set'})`
+          })
+        } else {
+          const reason = negRes.status === 'rejected' ? (negRes.reason?.message || 'unknown') : 'empty response'
+          contextBlock += `\n[negative keywords data unavailable: ${reason}]`
+        }
+      } else {
+        contextBlock += `\n\n═══ SEARCH TERM REPORT (last 30 days) ═══\n[auth header missing — cannot fetch search-terms/keywords/negatives]`
       }
 
       contextBlock += `
