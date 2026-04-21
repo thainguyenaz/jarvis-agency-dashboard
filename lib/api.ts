@@ -41,6 +41,8 @@ export const api = {
     jarvisFetch('/api/google-ads/performance', token),
   getGoogleAdsCampaigns: (token: string) =>
     jarvisFetch('/api/google-ads/campaigns', token),
+  getGoogleAdsChangeHistory: (token: string) =>
+    jarvisFetch('/api/google-ads/change-history', token),
 
   // GA4
   getGA4Overview: (token: string) =>
@@ -49,6 +51,10 @@ export const api = {
   // CTM
   getCTMSummary: (token: string) =>
     jarvisFetch('/api/ctm/summary', token),
+  getCTMSourceBreakdown: (token: string) =>
+    jarvisFetch('/api/ctm/source-breakdown', token),
+  getCTMSourceDetail: (key: string, token: string) =>
+    jarvisFetch(`/api/ctm/source-detail/${encodeURIComponent(key)}`, token),
 
   // HubSpot
   getHubSpotPipeline: (token: string) =>
