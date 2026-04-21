@@ -213,7 +213,7 @@ export default function CTMPage() {
         </div>
 
         <div className="text-[10px] md:text-xs font-mono text-jarvis-dim mt-3">
-          Qualified = admissions-reviewed sale.score 4-5 · CPL = spend_30d / qualified · Paid-source CPL shows "—" when qualified=0 until a disposition is set
+          Qualified = admissions-reviewed sale.score 4-5 · CPL = spend_30d / qualified · Paid-source CPL shows &ldquo;—&rdquo; when qualified=0 until a disposition is set
         </div>
 
         {Object.keys(breakdown.unmapped_raw_sources).length > 0 && (
