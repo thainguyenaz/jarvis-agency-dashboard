@@ -212,38 +212,32 @@ export default function SourceDetailPage() {
         {data.recent_calls.length === 0 ? (
           <div className="text-jarvis-dim font-mono text-xs md:text-sm">No calls in window.</div>
         ) : (
-          <div className="overflow-x-auto -mx-3 md:mx-0">
-            <table className="w-full font-mono text-[11px] md:text-sm">
-              <thead>
-                <tr className="border-b border-jarvis-border text-jarvis-dim">
-                  <th className="text-left py-2 px-2 font-normal">WHEN</th>
-                  <th className="text-right py-2 px-2 font-normal">DUR</th>
-                  <th className="text-left py-2 px-2 font-normal">DISPOSITION</th>
-                  <th className="text-center py-2 px-2 font-normal">SCORE</th>
-                  <th className="text-left py-2 px-2 font-normal">CALLER</th>
-                </tr>
-              </thead>
-              <tbody>
-                {data.recent_calls.map((c) => (
-                  <tr key={c.id} className="border-b border-jarvis-border/40">
-                    <td className="py-2 px-2 text-jarvis-text whitespace-nowrap">{fmtDate(c.called_at)}</td>
-                    <td className="py-2 px-2 text-right text-jarvis-text whitespace-nowrap">{fmtDuration(c.duration_seconds)}</td>
-                    <td className="py-2 px-2 text-jarvis-text">
-                      {c.sale_name || <span className="text-jarvis-yellow">unreviewed</span>}
-                    </td>
-                    <td className={`py-2 px-2 text-center font-bold ${
-                      (c.sale_score ?? 0) >= 4 ? 'text-jarvis-green' :
-                      c.sale_score === null ? 'text-jarvis-yellow' :
-                      'text-jarvis-dim'
-                    }`}>
-                      {c.sale_score !== null ? c.sale_score : '—'}
-                    </td>
-                    <td className="py-2 px-2 text-jarvis-dim whitespace-nowrap">{c.caller_masked}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <ul className="divide-y divide-jarvis-border/40">
+            {data.recent_calls.map((c) => (
+              <li key={c.id} className="py-2 font-mono text-[11px] md:text-sm">
+                <div className="flex justify-between gap-2">
+                  <span className="text-jarvis-text whitespace-nowrap">{fmtDate(c.called_at)}</span>
+                  <span className="text-jarvis-text whitespace-nowrap">{fmtDuration(c.duration_seconds)}</span>
+                </div>
+                <div className="flex justify-between gap-2 mt-0.5">
+                  <span className="truncate">
+                    {c.sale_name
+                      ? <span className={c.sale_score !== null && c.sale_score >= 4 ? 'text-jarvis-green font-bold' : 'text-jarvis-text'}>{c.sale_name}</span>
+                      : <span className="text-jarvis-yellow">unreviewed</span>
+                    }
+                    {c.sale_score !== null && (
+                      <span className={`ml-1 ${
+                        c.sale_score >= 4 ? 'text-jarvis-green' : 'text-jarvis-dim'
+                      }`}>
+                        ({c.sale_score}★)
+                      </span>
+                    )}
+                  </span>
+                  <span className="text-jarvis-dim whitespace-nowrap">{c.caller_masked}</span>
+                </div>
+              </li>
+            ))}
+          </ul>
         )}
       </div>
 

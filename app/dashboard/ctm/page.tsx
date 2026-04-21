@@ -159,58 +159,66 @@ export default function CTMPage() {
           </div>
         </div>
 
-        <div className="overflow-x-auto -mx-3 md:mx-0">
-          <table className="w-full font-mono text-xs md:text-sm">
-            <thead>
-              <tr className="border-b border-jarvis-border text-jarvis-dim">
-                <th className="text-left py-2 px-3 font-normal">SOURCE</th>
-                <th className="text-right py-2 px-2 font-normal">TOTAL</th>
-                <th className="text-right py-2 px-2 font-normal">QUALIFIED</th>
-                <th className="text-right py-2 px-3 font-normal">CPL</th>
-              </tr>
-            </thead>
-            <tbody>
-              {breakdown.sources.map((s) => (
-                <tr
-                  key={s.key}
-                  className="border-b border-jarvis-border/40 hover:bg-jarvis-bg/40"
-                >
-                  <td className="py-2 px-3">
-                    <Link
-                      href={`/dashboard/ctm/source/${s.key}`}
-                      className="text-jarvis-text hover:text-jarvis-cyan block"
-                    >
-                      <div className="truncate max-w-[180px] md:max-w-none">{s.label}</div>
+        <table className="w-full font-mono text-xs md:text-sm table-fixed">
+          <colgroup>
+            <col className="w-auto" />
+            <col className="w-[52px] md:w-[80px]" />
+            <col className="w-[56px] md:w-[96px]" />
+            <col className="w-[64px] md:w-[96px]" />
+          </colgroup>
+          <thead>
+            <tr className="border-b border-jarvis-border text-jarvis-dim">
+              <th className="text-left py-2 pr-1 font-normal">SOURCE</th>
+              <th className="text-right py-2 px-1 font-normal">TOTAL</th>
+              <th className="text-right py-2 px-1 font-normal">QUAL</th>
+              <th className="text-right py-2 pl-1 font-normal">CPL</th>
+            </tr>
+          </thead>
+          <tbody>
+            {breakdown.sources.map((s) => (
+              <tr
+                key={s.key}
+                className="border-b border-jarvis-border/40 hover:bg-jarvis-bg/40"
+              >
+                <td className="py-2 pr-1">
+                  <Link
+                    href={`/dashboard/ctm/source/${s.key}`}
+                    className="text-jarvis-text hover:text-jarvis-cyan block"
+                  >
+                    <div className="flex items-center gap-1">
+                      <span className="truncate">{s.label}</span>
                       {s.is_paid && (
-                        <div className="text-[9px] md:text-[10px] text-jarvis-dim uppercase tracking-widest">paid</div>
+                        <span className="shrink-0 text-[8px] md:text-[10px] text-jarvis-cyan border border-jarvis-cyan/40 rounded px-1 uppercase tracking-widest">
+                          $
+                        </span>
                       )}
-                    </Link>
-                  </td>
-                  <td className="py-2 px-2 text-right text-jarvis-text">
-                    {fmtInt(s.total_calls)}
-                  </td>
-                  <td className={`py-2 px-2 text-right font-bold ${
-                    s.qualified > 0 ? 'text-jarvis-green' : 'text-jarvis-dim'
-                  }`}>
-                    {fmtInt(s.qualified)}
-                  </td>
-                  <td className={`py-2 px-3 text-right ${
-                    s.is_paid && s.qualified_cpl === null ? 'text-jarvis-yellow' :
-                    s.is_paid ? 'text-jarvis-cyan' : 'text-jarvis-dim'
-                  }`}>
-                    {fmtCPL(s.qualified_cpl, s.is_paid)}
-                  </td>
-                </tr>
-              ))}
-              <tr className="border-t-2 border-jarvis-border">
-                <td className="py-2 px-3 text-jarvis-dim uppercase tracking-widest text-[10px]">TOTAL</td>
-                <td className="py-2 px-2 text-right text-jarvis-cyan">{fmtInt(breakdown.totals.total_calls)}</td>
-                <td className="py-2 px-2 text-right text-jarvis-green font-bold">{fmtInt(breakdown.totals.qualified)}</td>
-                <td className="py-2 px-3 text-right text-jarvis-dim">—</td>
+                    </div>
+                  </Link>
+                </td>
+                <td className="py-2 px-1 text-right text-jarvis-text tabular-nums">
+                  {fmtInt(s.total_calls)}
+                </td>
+                <td className={`py-2 px-1 text-right font-bold tabular-nums ${
+                  s.qualified > 0 ? 'text-jarvis-green' : 'text-jarvis-dim'
+                }`}>
+                  {fmtInt(s.qualified)}
+                </td>
+                <td className={`py-2 pl-1 text-right tabular-nums ${
+                  s.is_paid && s.qualified_cpl === null ? 'text-jarvis-yellow' :
+                  s.is_paid ? 'text-jarvis-cyan' : 'text-jarvis-dim'
+                }`}>
+                  {fmtCPL(s.qualified_cpl, s.is_paid)}
+                </td>
               </tr>
-            </tbody>
-          </table>
-        </div>
+            ))}
+            <tr className="border-t-2 border-jarvis-border">
+              <td className="py-2 pr-1 text-jarvis-dim uppercase tracking-widest text-[10px]">TOTAL</td>
+              <td className="py-2 px-1 text-right text-jarvis-cyan tabular-nums">{fmtInt(breakdown.totals.total_calls)}</td>
+              <td className="py-2 px-1 text-right text-jarvis-green font-bold tabular-nums">{fmtInt(breakdown.totals.qualified)}</td>
+              <td className="py-2 pl-1 text-right text-jarvis-dim">—</td>
+            </tr>
+          </tbody>
+        </table>
 
         <div className="text-[10px] md:text-xs font-mono text-jarvis-dim mt-3">
           Qualified = admissions-reviewed sale.score 4-5 · CPL = spend_30d / qualified · Paid-source CPL shows &ldquo;—&rdquo; when qualified=0 until a disposition is set
