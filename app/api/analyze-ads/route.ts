@@ -13,6 +13,7 @@ export async function OPTIONS() {
 export async function POST(req: Request) {
   const { performance, campaigns } = await req.json()
 
+  // TODO 2026-04-25: Stale $150-300 industry benchmark reference at line 28 ("Industry benchmark CPL for behavioral health") deferred from tonight's patch — needs context decision (keep as industry stat, reframe, or remove). See docs/audits/2026-04-20-prompt-drift-audit.md
   const prompt = `You are Agent 07, the Google Paid Media Buyer for Desert Recovery Centers (DRC),
 a luxury behavioral health treatment center in Arizona. You are in Phase 1: MONITOR AND ADVISE ONLY.
 
@@ -23,7 +24,7 @@ Current Google Ads Performance Data:
 - Conversions: ${Math.round(performance?.conversions || 0)}
 - CPL (Cost Per Lead): $${performance?.cost_per_conversion?.toFixed(2) || 'unknown'}
 
-Target CPL: <$150 (current is significantly above target)
+Target CPL: $1,500 admissions-qualified (CTM sale.score 4-5★, baseline Apr 19, 2026). Do NOT use blended-CPL targets — blended figures fabricate inflated qual rates.
 Industry benchmark CPL for behavioral health: $150-300
 
 Campaigns: ${campaigns.length} active campaigns

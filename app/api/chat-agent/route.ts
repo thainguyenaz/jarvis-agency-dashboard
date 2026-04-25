@@ -484,7 +484,7 @@ GOOGLE ADS — 7-DAY PERFORMANCE:
 - Spend: $${pSummary?.total_spend?.toFixed(2) ?? 'unknown'}
 - Clicks: ${pSummary?.total_clicks ?? 'unknown'}
 - CPC: $${pSummary?.avg_cpc?.toFixed(2) ?? 'unknown'}
-- CPL: $${pSummary?.cost_per_conversion?.toFixed(2) ?? 'unknown'} (target: $150)
+- CPL: $${pSummary?.cost_per_conversion?.toFixed(2) ?? 'unknown'} blended (target: $1,500 admissions-qualified, CTM sale.score 4-5★, baseline Apr 19, 2026 — NOT blended)
 - Conversions: ${Math.round(pSummary?.total_conversions || 0)}
 - CTR: ${pSummary?.avg_ctr?.toFixed(2) ?? 'unknown'}%
 
@@ -549,6 +549,7 @@ HUBSPOT PIPELINE:
         contextBlock += `Filtered out: ${qs.filtered_out_short_duration} short (<2min), ${qs.filtered_out_unanswered} unanswered\n`
       }
 
+      // TODO 2026-04-25: Stale $150 reference at line 559 ("When account CPL exceeds the $150 target...") deferred from tonight's patch — needs logic rewrite, not string swap. See docs/audits/2026-04-20-prompt-drift-audit.md
       contextBlock += `
 RECOMMENDATION FRAMEWORK:
 - NEVER recommend increasing PMax budget based on call volume alone — cross-reference with CTM star ratings
@@ -673,7 +674,7 @@ Total Spend: $${ps?.total_spend?.toFixed(2) ?? 'unknown'}
 Total Clicks: ${ps?.total_clicks ?? 'unknown'}
 Avg CPC: $${ps?.avg_cpc?.toFixed(2) ?? 'unknown'}
 Conversions: ${Math.round(ps?.total_conversions || 0)}
-CPL: $${ps?.cost_per_conversion?.toFixed(2) ?? 'unknown'} (target: $150)
+CPL: $${ps?.cost_per_conversion?.toFixed(2) ?? 'unknown'} blended (target: $1,500 admissions-qualified, CTM sale.score 4-5★, baseline Apr 19, 2026 — NOT blended)
 CTR: ${ps?.avg_ctr?.toFixed(2) ?? 'unknown'}%`
 
       // Enumerate each campaign with ALL data attached
