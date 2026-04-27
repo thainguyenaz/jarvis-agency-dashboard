@@ -3,6 +3,7 @@ import fs from 'fs'
 
 const DB_PATH = '/home/openclaw/data/jarvis-cache.db'
 const STALE_HOURS = 25
+const STALE_HOURS_MTD = 1
 const VPS_BASE = 'https://api.desertrecoverycenters.com'
 
 interface CacheResult {
@@ -20,6 +21,7 @@ interface SourceDef {
 const SQLITE_SOURCES: Record<string, SourceDef> = {
   adsPerf:         { source: 'GOOGLE_ADS', endpoint: 'performance_7', label: 'GoogleAds7d' },
   adsPerf30:       { source: 'GOOGLE_ADS', endpoint: 'performance',   label: 'GoogleAds30d' },
+  adsPerfMtd:      { source: 'GOOGLE_ADS', endpoint: 'performance_mtd', label: 'GoogleAdsMTD' },
   ctmQuality:      { source: 'ctm',        endpoint: 'quality-30d',   label: 'CTM' },
   campaignQuality: { source: 'ctm',        endpoint: 'campaign-quality-30d', label: 'CampaignQuality' },
   campaignHistory: { source: 'GOOGLE_ADS', endpoint: 'campaign_history', label: 'CampaignHistory' },
@@ -33,6 +35,7 @@ const SQLITE_SOURCES: Record<string, SourceDef> = {
 const API_ENDPOINTS: Record<string, string> = {
   adsPerf:         '/api/google-ads/performance?days=7',
   adsPerf30:       '/api/google-ads/performance?days=30',
+  adsPerfMtd:      '/api/google-ads/performance?range=mtd',
   ctmQuality:      '/api/ctm/quality-report?days=30',
   campaignQuality: '/api/ctm/campaign-quality?days=30',
   campaignHistory: '/api/google-ads/campaign-history',
@@ -68,10 +71,14 @@ function readSQLiteCache(): Record<string, CacheResult> | null {
   try {
     if (!fs.existsSync(DB_PATH)) return null
     const db = new Database(DB_PATH, { readonly: true, fileMustExist: true })
-    const cutoff = Date.now() - STALE_HOURS * 3600 * 1000
+    const now = Date.now()
+    const cutoffDefault = now - STALE_HOURS * 3600 * 1000
+    const cutoffMtd = now - STALE_HOURS_MTD * 3600 * 1000
     const results: Record<string, CacheResult> = {}
 
     for (const [key, def] of Object.entries(SQLITE_SOURCES)) {
+      const cutoff = (def.source === 'GOOGLE_ADS' && def.endpoint === 'performance_mtd')
+        ? cutoffMtd : cutoffDefault
       const row = db.prepare(
         'SELECT data, fetched_at FROM sync_cache WHERE source = ? AND endpoint = ? LIMIT 1'
       ).get(def.source, def.endpoint) as { data: string; fetched_at: number | string } | undefined
@@ -143,7 +150,8 @@ export async function getContext(agentId?: string) {
 
   const census = data.kipu || null
   const budgetCaps = data.budgetCaps || null
-  const liveOpsBlock = buildLiveOpsBlock(census, budgetCaps)
+  const adsPerfMtd = data.adsPerfMtd || null
+  const liveOpsBlock = buildLiveOpsBlock(census, budgetCaps, adsPerfMtd)
 
   return {
     performance: data.adsPerf || null,
@@ -161,7 +169,7 @@ export async function getContext(agentId?: string) {
   }
 }
 
-function buildLiveOpsBlock(census: any, budgetCaps: any): string {
+function buildLiveOpsBlock(census: any, budgetCaps: any, mtd: any): string {
   const lines: string[] = []
   lines.push('')
   lines.push('═══ LIVE OPERATIONAL DATA — AUTHORITATIVE, OVERRIDES ANY STATIC TEXT ═══')
@@ -193,6 +201,25 @@ function buildLiveOpsBlock(census: any, budgetCaps: any): string {
   } else {
     lines.push('')
     lines.push('CURRENT LIVE BUDGET CAPS: unavailable — say so; do not cite hardcoded zone targets as current.')
+  }
+
+  if (mtd && mtd.summary && typeof mtd.summary.total_spend === 'number') {
+    // Hardcoded array because new Date('YYYY-MM-DD') parses as UTC
+    // midnight, which becomes the previous day in AZ — toLocaleString
+    // would yield the wrong month name. Slicing the YYYY-MM-DD string
+    // is the correct path.
+    const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December']
+    const monthIdx = parseInt((mtd.period?.from || '').slice(5, 7), 10) - 1
+    const monthName = MONTHS[monthIdx] || 'Current month'
+    const spend = mtd.summary.total_spend.toLocaleString('en-US', { style: 'currency', currency: 'USD' })
+    lines.push('')
+    lines.push('GOOGLE ADS — MONTH-TO-DATE SPEND (Arizona)')
+    lines.push(`${monthName} MTD: ${spend} [as of ${mtd.as_of || 'unknown'}]`)
+    lines.push(`Period: ${mtd.period?.from} to ${mtd.period?.to} (${mtd.period?.days} days)`)
+    lines.push(`Note: ${mtd.freshness_note || 'Google Ads reporting may lag.'}`)
+  } else {
+    lines.push('')
+    lines.push('GOOGLE ADS — MONTH-TO-DATE SPEND: data temporarily unavailable — say so; do not infer MTD spend from monthly budget targets or 7-day extrapolation.')
   }
 
   lines.push('═══ END LIVE OPERATIONAL DATA ═══')
