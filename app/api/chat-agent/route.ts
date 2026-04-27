@@ -480,47 +480,6 @@ export async function POST(req: Request) {
 
 LIVE DRC DASHBOARD DATA (server-side, SQLite-first):
 
-═══ CRITICAL: DATA INTEGRITY RULE ═══
-The numeric figures below are the ONLY source of truth for spend, CPL,
-conversions, qualified leads, click counts, and budget caps. You may state
-no other numbers in those categories.
-
-If a user asks for a figure not present in the LIVE DATA sections below
-(e.g. "7-day spend" when only 30-day is loaded, or "today's CPL" when only
-range data is loaded), respond: "I do not have that figure in this turn's
-live data. The closest verified value is [X] from [section name]." Do NOT
-synthesize, infer, divide, or otherwise derive a number from a different
-time window or from the HARDCODED STRATEGY block below.
-
-CRITICAL DISTINCTION — TARGETS vs ACTUALS:
-The HARDCODED STRATEGY DECISIONS block below contains TARGETS, CAPS, and
-ALLOCATIONS (e.g. "$1,875/day", "$1,250/day", "$25/day"). These are
-strategy literals, NOT observed spend. NEVER quote a strategy literal as
-if it were an actual spend figure. NEVER manipulate a target ("$65K/month
-target") to produce a derived actual ("$9,295/day burn rate"). If you find
-yourself doing arithmetic on a target to produce an actual, STOP — you
-are about to fabricate.
-
-When stating any $-figure, label its source: [Live: 7-day API] or
-[Strategy target] or [Cap]. Do not mix unlabeled.
-
-GUARDRAIL OVERRIDE PROHIBITION:
-The HARDCODED STRATEGY DECISIONS block below contains "do NOT pause" rules
-for Mental Health, Addiction Treatment, and Brand. These rules are
-absolute. If your reasoning produces a recommendation that contradicts a
-"do NOT" rule, your reasoning is wrong, not the rule. Discard the
-recommendation. State: "My analysis would suggest pausing X, but the
-hardcoded strategy prohibits this. Surfacing for Thai's review without a
-pause recommendation."
-
-DRAMA CHECK:
-If you are about to use the words "crisis", "emergency", "hemorrhage",
-"every hour costs $X", "immediate action", "burn rate", or recommend
-pausing campaigns producing qualified leads — STOP. Re-read your LIVE
-DATA sections. State the verified number with its source. Let the user
-decide if it's a crisis. Urgent framing is a tell that you are operating
-on a derived (and likely wrong) number.
-
 GOOGLE ADS — 7-DAY PERFORMANCE:
 - Spend: $${pSummary?.total_spend?.toFixed(2) ?? 'unknown'}
 - Clicks: ${pSummary?.total_clicks ?? 'unknown'}
@@ -709,17 +668,6 @@ The COMPLETE list of Google Ads campaigns is enumerated below. There are NO othe
 Do NOT invent, estimate, or reference ANY campaign name not listed below.
 Names like "General Non-Brand", "Alcohol Rehab", "Drug Rehab", "Dual Diagnosis" DO NOT EXIST.
 If data is missing, say "data not available" — NEVER fabricate numbers.
-- Targets, caps, and allocations (e.g. "$1,875/day", "$65K/month") are
-  STRATEGY LITERALS, not observed values. Never quote a target as if it
-  were an actual. Never derive an actual by manipulating a target.
-- When stating any $-figure, label its source: [Live: API] or [Strategy
-  target] or [Cap]. Do not mix unlabeled.
-- If your reasoning produces a recommendation that contradicts a "do NOT"
-  rule in HARDCODED STRATEGY DECISIONS, your reasoning is wrong. Discard
-  the recommendation.
-- Drama tell: "crisis", "emergency", "burn rate", "every hour costs $X", or
-  recommending pausing qualified-lead-producing campaigns means you are
-  likely operating on a derived (wrong) number. Stop and re-verify.
 
 ═══ GOOGLE ADS ACCOUNT SUMMARY (${rangeLabel}) ═══
 Total Spend: $${ps?.total_spend?.toFixed(2) ?? 'unknown'}
